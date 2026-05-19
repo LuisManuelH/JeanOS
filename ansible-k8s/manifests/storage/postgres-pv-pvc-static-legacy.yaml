@@ -1,0 +1,32 @@
+#Persisten Volume  (PV)
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: postgres-nfs-pv
+spec:
+  capacity:
+    storage: 5Gi                  #Tamaño del volumen
+  accessModes:
+    - ReadWriteOnce              #Solo un pod escribr a la vez
+  persistentVolumeReclaimPolicy: Retain #Si se borra el PVC los datos no se borran
+  storageClassName: ""           #Volumen estatico
+  nfs:
+    server: 192.168.41.154      #ip del master
+    path: /srv/nfs/postgres    #directorio que fue exportado
+#Summary
+#Existe este almacenamiento, esta en el servidor NFS y tiene 5GB
+---
+#Persistent Volume Claim
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-nfs-pvc
+  namespace: jeanos-shop # en que namespace esta
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: ""  #
+  resources:
+    requests:
+      storage: 5Gi # 
+#Se necesitan 5GB con esas caracteristicas.

@@ -1,0 +1,52 @@
+- name: Configurar clientes NFS en workers
+  hosts: k8s_workers
+  become: true
+
+  vars:
+    nfs_server_ip: "192.168.41.154"
+    nfs_export_path: "/srv/nfs/postgres"
+    nfs_test_mount: "/mnt/nfs-postgres-test"
+
+  tasks:
+    - name: Instalar cliente NFS
+      dnf:
+        name: nfs-utils
+        state: present
+
+    - name: Verificar exports disponibles en el servidor NFS
+      command: showmount -e {{ nfs_server_ip }}
+      register: nfs_exports
+      changed_when: false
+
+    - name: Mostrar exports detectados
+      debug:
+        var: nfs_exports.stdout_lines
+
+    - name: Crear punto de montaje temporal
+      file:
+        path: "{{ nfs_test_mount }}"
+        state: directory
+        mode: '0755'
+
+    - name: Montar NFS temporalmente
+      command: mount -t nfs {{ nfs_server_ip }}:{{ nfs_export_path }} {{ nfs_test_mount }}
+      register: mount_result
+      changed_when: true
+
+    - name: Probar escritura en NFS
+      copy:
+        content: "Prueba NFS desde {{ inventory_hostname }}\n"
+        dest: "{{ nfs_test_mount }}/prueba-{{ inventory_hostname }}.txt"
+
+    - name: Verificar archivo escrito
+      command: cat {{ nfs_test_mount }}/prueba-{{ inventory_hostname }}.txt
+      register: test_file
+      changed_when: false
+
+    - name: Mostrar resultado de prueba
+      debug:
+        var: test_file.stdout
+
+    - name: Desmontar NFS temporal
+      command: umount {{ nfs_test_mount }}
+      changed_when: true

@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nfs-dynamic-test-pvc
+  namespace: jeanos-shop
+spec:
+  storageClassName: nfs-client
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-nfs-dynamic
+  namespace: jeanos-shop
+spec:
+  restartPolicy: Never
+  containers:
+    - name: test
+      image: busybox:1.36
+      command:
+        - sh
+        - -c
+        - |
+          echo "PVC dinámico NFS funcionando" > /data/prueba-dinamica.txt
+          cat /data/prueba-dinamica.txt
+          sleep 3600
+      volumeMounts:
+        - name: dynamic-storage
+          mountPath: /data
+  volumes:
+    - name: dynamic-storage
+      persistentVolumeClaim:
+        claimName: nfs-dynamic-test-pvc
