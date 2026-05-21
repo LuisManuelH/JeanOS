@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jeanos-frontend
+  namespace: jeanos-shop
+  labels:
+    app: jeanos-frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: jeanos-frontend
+  template:
+    metadata:
+      labels:
+        app: jeanos-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: docker.io/luishahz/jeanos-frontend:v1
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 3
+            failureThreshold: 3
+
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "200m"
+              memory: "128Mi"

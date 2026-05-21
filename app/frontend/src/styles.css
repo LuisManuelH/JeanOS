@@ -1,0 +1,14 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+ 
+html, body {
+  height: 100%;
+  background: #08090d;
+  color: #e8eaf2;
+  font-family: 'IBM Plex Mono', monospace;
+  -webkit-font-smoothing: antialiased;
+}
+ 
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #08090d; }
+::-webkit-scrollbar-thumb { background: #1c1e2a; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #2e3048; }

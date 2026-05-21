@@ -1,0 +1,132 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jeanos-backend
+  namespace: jeanos-shop
+  labels:
+    app: jeanos-backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: jeanos-backend
+  template:
+    metadata:
+      labels:
+        app: jeanos-backend
+    spec:
+      initContainers:
+        - name: wait-for-postgres
+          image: postgres:15-alpine
+          command:
+            - sh
+            - -c
+            - |
+              echo "Esperando PostgreSQL..."
+              until pg_isready -h postgres-service -p 5432 -U "$DB_USER" -d "$DB_NAME"; do
+                echo "PostgreSQL aún no está listo..."
+                sleep 2
+              done
+
+              echo "PostgreSQL listo. Validando tabla productos..."
+              until psql -h postgres-service -U "$DB_USER" -d "$DB_NAME" -tAc "SELECT COUNT(*) FROM productos;" > /dev/null 2>&1; do
+                echo "La tabla productos aún no está disponible..."
+                sleep 2
+              done
+
+              echo "Tabla productos validada correctamente."
+          env:
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_DB
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_USER
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_PASSWORD
+
+        - name: wait-for-redis
+          image: redis:7-alpine
+          command:
+            - sh
+            - -c
+            - |
+              echo "Esperando Redis..."
+              until redis-cli -h redis-service -p 6379 ping | grep PONG; do
+                echo "Redis aún no está listo..."
+                sleep 2
+              done
+              echo "Redis listo."
+
+      containers:
+        - name: backend
+          image: docker.io/luishahz/jeanos-backend:v1
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3000
+              name: http
+
+          env:
+            - name: PORT
+              value: "3000"
+
+            - name: DB_HOST
+              value: "postgres-service"
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_DB
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_PASSWORD
+
+            - name: REDIS_HOST
+              value: "redis-service"
+            - name: REDIS_PORT
+              value: "6379"
+
+            - name: CACHE_TTL_SECONDS
+              value: "3600"
+
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 3
+            failureThreshold: 3
+
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"
