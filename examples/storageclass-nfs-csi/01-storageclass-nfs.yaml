@@ -1,0 +1,35 @@
+---
+# TEORIA: StorageClass define CÓMO se aprovisiona el almacenamiento.
+# Con NFS CSI Driver, cuando se crea un PVC:
+#   1. Kubernetes llama al NFS CSI Driver
+#   2. El driver crea un subdirectorio en el servidor NFS
+#   3. El driver crea un PV automáticamente
+#   4. El PVC pasa a estado Bound
+#
+# El desarrollador solo necesita crear un PVC con storageClassName: nfs-csi
+# No necesita saber la IP del NFS, el path, ni nada de infraestructura.
+#
+# reclaimPolicy:
+#   Delete → al borrar el PVC, se borra el PV y el subdirectorio NFS
+#   Retain → se conservan los datos (recomendado para producción)
+#
+# subDir con variables:
+#   ${pvc.metadata.namespace}/${pvc.metadata.name}
+#   Ejemplo: bootcamp/mi-pvc → /srv/nfs/k8s-storage/bootcamp/mi-pvc/
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: nfs-csi
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+provisioner: nfs.csi.k8s.io
+parameters:
+  server: 192.168.121.135
+  share: /srv/test01
+  subDir: ${pvc.metadata.namespace}/${pvc.metadata.name}
+reclaimPolicy: Delete
+volumeBindingMode: Immediate
+mountOptions:
+  - nfsvers=4.1
+  - hard
+  - intr

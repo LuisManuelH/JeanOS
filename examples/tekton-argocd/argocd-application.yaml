@@ -1,0 +1,23 @@
+# Prerequisito: kubectl create namespace argocd
+# Instalar ArgoCD: kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+# Cambiar repoURL con el repo de GitHub del alumno
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mi-tienda                 # <- nombre de la app en ArgoCD
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: "https://github.com/aliothosa/page-public-demo"   # <- cambiar por tu repo GitHub
+    targetRevision: main
+    path: k8s                     # carpeta donde están deployment.yaml y service.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: demo               # namespace donde se despliega la app
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true      # crea el namespace si no existe

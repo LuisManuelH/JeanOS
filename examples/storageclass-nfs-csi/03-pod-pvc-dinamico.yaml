@@ -1,0 +1,32 @@
+---
+# Pod que usa el PVC creado dinámicamente
+# Demuestra que el developer no necesita saber nada del NFS
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-pvc-dinamico
+  namespace: bootcamp
+spec:
+  containers:
+    - name: app
+      image: busybox:1.36
+      command: ["/bin/sh", "-c"]
+      args:
+        - |
+          echo "=== PVC Dinámico con NFS CSI Driver ==="
+          echo "Nodo: $(cat /proc/sys/kernel/hostname)"
+          echo ""
+          echo "Espacio disponible:"
+          df -h /datos
+          echo ""
+          echo "$(date): primer acceso desde $(hostname)" >> /datos/log.txt
+          echo "Contenido del volumen:"
+          cat /datos/log.txt
+          sleep 3600
+      volumeMounts:
+        - name: storage
+          mountPath: /datos
+  volumes:
+    - name: storage
+      persistentVolumeClaim:
+        claimName: pvc-dinamico
