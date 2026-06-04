@@ -17,8 +17,39 @@ data:
         isDefault: true
         jsonData:
           timeInterval: "15s"
+          exemplarTraceIdDestinations:
+            - name: traceID
+              datasourceUid: tempo
+
       - name: Loki
         type: loki
         uid: loki
         url: http://loki.monitoring.svc:3100
         access: proxy
+        jsonData:
+          derivedFields:
+            - name: TraceID
+              matcherRegex: '"traceID":"(\w+)"'
+              url: "$${__value.raw}"
+              datasourceUid: tempo
+
+      - name: Tempo
+        type: tempo
+        uid: tempo
+        url: http://tempo.monitoring.svc:3200
+        access: proxy
+        jsonData:
+          tracesToLogsV2:
+            datasourceUid: loki
+            tags:
+              - key: namespace
+              - key: pod
+          tracesToMetrics:
+            datasourceUid: prometheus
+            tags:
+              - key: namespace
+              - key: pod
+          serviceMap:
+            datasourceUid: prometheus
+          nodeGraph:
+            enabled: true

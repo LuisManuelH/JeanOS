@@ -1,6 +1,6 @@
 # Monitoreo JeanOS Shop — Semana 3
 
-Stack mínimo: **Prometheus**, **Grafana**, **Node Exporter**, **kube-state-metrics**, **Loki**, **Promtail**.
+Stack: **Prometheus**, **Grafana**, **Node Exporter**, **kube-state-metrics**, **Loki**, **Promtail**, **Tempo**.
 
 - Namespace: `monitoring`
 - PVCs: `storageClassName: nfs-client`
@@ -41,12 +41,18 @@ kubectl apply -f "${M}/loki/deployment.yaml"
 kubectl apply -f "${M}/loki/service.yaml"
 kubectl wait --for=condition=available deployment/loki -n monitoring --timeout=300s
 
-# 5. Promtail
+# 5. Tempo (trazas; correlación con Prometheus/Loki en Grafana)
+kubectl apply -f "${M}/tempo/configmap.yaml"
+kubectl apply -f "${M}/tempo/deployment.yaml"
+kubectl apply -f "${M}/tempo/service.yaml"
+kubectl wait --for=condition=available deployment/tempo -n monitoring --timeout=300s
+
+# 6. Promtail
 kubectl apply -f "${M}/promtail/rbac.yaml"
 kubectl apply -f "${M}/promtail/configmap.yaml"
 kubectl apply -f "${M}/promtail/daemonset.yaml"
 
-# 6. Prometheus
+# 7. Prometheus
 kubectl apply -f "${M}/prometheus/rbac.yaml"
 kubectl apply -f "${M}/prometheus/pvc.yaml"
 kubectl apply -f "${M}/prometheus/configmap.yaml"
@@ -54,7 +60,7 @@ kubectl apply -f "${M}/prometheus/deployment.yaml"
 kubectl apply -f "${M}/prometheus/service.yaml"
 kubectl wait --for=condition=available deployment/prometheus -n monitoring --timeout=300s
 
-# 7. Grafana
+# 8. Grafana
 kubectl apply -f "${M}/grafana/pvc.yaml"
 kubectl apply -f "${M}/grafana/datasources-configmap.yaml"
 kubectl apply -f "${M}/grafana/deployment.yaml"
@@ -68,6 +74,7 @@ kubectl wait --for=condition=available deployment/grafana -n monitoring --timeou
 kubectl apply -f ansible-k8s/manifests/monitoring/namespace.yaml
 kubectl apply -R -f ansible-k8s/manifests/monitoring/node-exporter/
 kubectl apply -R -f ansible-k8s/manifests/monitoring/loki/
+kubectl apply -R -f ansible-k8s/manifests/monitoring/tempo/
 kubectl apply -R -f ansible-k8s/manifests/monitoring/promtail/
 kubectl apply -R -f ansible-k8s/manifests/monitoring/prometheus/
 kubectl apply -R -f ansible-k8s/manifests/monitoring/grafana/
@@ -128,7 +135,8 @@ kubectl logs -n monitoring -l app=promtail --tail=20
 1. Login `http://<NODE_IP>:30300`
 2. **Explore → Prometheus**: `up{job="jeanos-backend"}`
 3. **Explore → Loki**: `{namespace="jeanos-shop"}`
-4. Importar dashboard nodos: **Dashboards → Import → ID `1860`** (Node Exporter Full)
+4. **Explore → Tempo** — Search; correlación **traces → metrics** (Prometheus) y **traces → logs** (Loki)
+5. Importar dashboard nodos: **Dashboards → Import → ID `1860`** (Node Exporter Full)
 
 ## Scrape configurado (Prometheus)
 
@@ -138,6 +146,7 @@ kubectl logs -n monitoring -l app=promtail --tail=20
 | `node-exporter`   | IPs nodos :9100 (inventory `192.168.41.x`) |
 | `kube-state-metrics` | `kube-state-metrics.monitoring.svc:8080` |
 | `jeanos-backend`  | `jeanos-backend-service.jeanos-shop.svc:3000` `/metrics` |
+| `tempo`           | `tempo.monitoring.svc:3200` `/metrics` |
 
 ## Troubleshooting
 
@@ -191,9 +200,14 @@ monitoring/
 ├── prometheus/          # incluye kube-state-metrics
 ├── grafana/
 ├── loki/
+├── tempo/
 └── promtail/
 ```
 
 ## Referencia
 
-Manifiestos basados en `examples/monitoring/`, `examples/00-namespace.yaml`, `examples/05-loki.yaml`, `examples/06-promtail.yaml` (sin Tekton/ArgoCD).
+Manifiestos basados en `examples/monitoring/`, `examples/00-namespace.yaml`, `examples/05-loki.yaml`, `examples/06-promtail.yaml`, `examples/07-tempo.yaml` (sin Tekton/ArgoCD).
+
+### Tempo y trazas de la app
+
+Tempo acepta OTLP en `tempo.monitoring.svc:4317` (gRPC) y `:4318` (HTTP). Sin instrumentación OpenTelemetry en el backend, Explore → Tempo puede estar vacío; las métricas de la tienda siguen en Prometheus (`jeanos_*`). Para enviar trazas desde Node.js, apunta el exporter OTLP a ese servicio.
