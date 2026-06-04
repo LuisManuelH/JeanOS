@@ -12,7 +12,10 @@ Rama **`lab/equipo`**: configuración probada del cluster, monitoreo y notas Tek
 ## Despliegue en Kubernetes
 
 ```bash
-./ansible-k8s/deploy-jeanos.sh --yes
+./ansible-k8s/deploy-jeanos.sh --yes          # Semana 2 — tienda
+# Semana 4 — Tekton + ArgoCD: ver docs/SEMANA-4-REPLICAR.md
+cp ansible-k8s/lab.env.example ansible-k8s/lab.env   # editar token/repo
+./ansible-k8s/deploy-semana4.sh --yes
 ./docs/evidencias/collect-evidence.sh
 ```
 

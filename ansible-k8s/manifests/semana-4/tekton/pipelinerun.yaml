@@ -1,0 +1,27 @@
+# PipelineRun de Semana 4. Personalizar repo e imagen vía lab.env + deploy-semana4.sh
+# Relanzar: cambiar PIPELINE_RUN_NAME en lab.env o borrar el run anterior.
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: build-and-deploy-run-1
+  namespace: tekton-pipelines
+spec:
+  pipelineRef:
+    name: build-and-deploy
+  params:
+    - name: repo-url
+      value: "__GITHUB_REPO_URL__"
+    - name: revision
+      value: main
+    - name: image
+      value: "emmanuelmal2/mi-tienda:v1"
+  workspaces:
+    - name: shared-source
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          storageClassName: nfs-client
+          resources:
+            requests:
+              storage: 500Mi

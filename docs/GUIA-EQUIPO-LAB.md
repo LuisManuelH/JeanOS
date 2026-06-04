@@ -120,20 +120,17 @@ Detalle: `docs/semana-3-monitoring.md`
 
 ## 6. Semana 4 — Tekton + ArgoCD
 
-Carpeta: `examples/tekton-argocd/` (ya usa `nfs-client`, no `nfs-csi`).
+Manifests del equipo: **`ansible-k8s/manifests/semana-4/`** + script **`ansible-k8s/deploy-semana4.sh`**.
 
-1. Copiar al master: `scp -r examples/tekton-argocd root@IP_MASTER:/root/JeanOS/examples/`
-2. Tekton + label `pod-security=privileged` en `tekton-pipelines`
-3. Secret Docker Hub en `tekton-pipelines`
-4. Editar `pipelinerun-demo.yaml` y `argocd-application.yaml` (repo GitHub + imagen)
-5. ArgoCD UI: `https://IP_NODO:30443`
+1. Personalizar: `./scripts/personalizar-lab.sh IP_MASTER IP_W1 IP_W2 USUARIO_DOCKERHUB`
+2. `cd ansible-k8s && cp lab.env.example lab.env` → editar `GITHUB_REPO_URL`, `DOCKER_TOKEN`, etc.
+3. Copiar al master: `scp -r ansible-k8s root@IP_MASTER:/root/JeanOS/`
+4. En el master: `chmod +x deploy-semana4.sh && ./deploy-semana4.sh --yes`
+5. ArgoCD UI: `https://IP_NODO:30443` — app demo: `http://IP_NODO:31080`
 
-**CLI en ARM64:**
+**CLI en ARM64:** `tkn_*_Linux_arm64.tar.gz`, `argocd-linux-arm64`
 
-- `tkn_*_Linux_arm64.tar.gz`
-- `argocd-linux-arm64`
-
-Guía completa: `examples/tekton-argocd/README.md`
+Guías: **`docs/SEMANA-4-REPLICAR.md`** · conceptos: `examples/tekton-argocd/README.md`
 
 ---
 

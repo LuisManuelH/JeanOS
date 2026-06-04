@@ -1,0 +1,22 @@
+# ArgoCD Application — despliega el manifiesto k8s/ del repo Git en namespace demo.
+# Requiere ArgoCD instalado (deploy-semana4.sh) y imagen ya en Docker Hub (Tekton).
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mi-tienda
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: "__GITHUB_REPO_URL__"
+    targetRevision: main
+    path: k8s
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: demo
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
