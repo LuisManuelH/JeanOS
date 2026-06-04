@@ -1,5 +1,5 @@
-# ArgoCD Application — despliega el manifiesto k8s/ del repo Git en namespace demo.
-# Requiere ArgoCD instalado (deploy-semana4.sh) y imagen ya en Docker Hub (Tekton).
+# ArgoCD Application — despliega demo/ (imagen arm64 de Tekton) desde JeanOS lab/equipo.
+# El pipeline Tekton sigue clonando GITHUB_REPO_URL (app/); esta ruta evita imagen amd64 del curso.
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -8,9 +8,9 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: "__GITHUB_REPO_URL__"
-    targetRevision: main
-    path: k8s
+    repoURL: https://github.com/aliothosa/JeanOS
+    targetRevision: lab/equipo
+    path: ansible-k8s/manifests/semana-4/demo
   destination:
     server: https://kubernetes.default.svc
     namespace: demo

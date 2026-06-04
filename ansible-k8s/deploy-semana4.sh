@@ -120,7 +120,7 @@ if ! $SKIP_ARGOCD; then
   log "Instalar ArgoCD"
   if confirm "¿Aplicar ArgoCD install.yaml?"; then
     kubectl create namespace argocd --dry-run=client -o yaml | kubectl apply -f -
-    kubectl apply -n argocd -f "${ARGOCD_INSTALL}"
+    kubectl apply -n argocd -f "${ARGOCD_INSTALL}" --server-side --force-conflicts
     log "Esperando pods argocd (puede tardar 3-5 min)..."
     kubectl wait --for=condition=Available deployment -l app.kubernetes.io/part-of=argocd \
       -n argocd --timeout=600s 2>/dev/null || kubectl get pods -n argocd

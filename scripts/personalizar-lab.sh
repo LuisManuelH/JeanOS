@@ -53,7 +53,7 @@ sed -i.bak "s|__DOCKER_USER__|${DOCKER_USER}|g" "${LAB_EX}"
 rm -f "${LAB_EX}.bak"
 for f in \
   "${ROOT}/ansible-k8s/manifests/semana-4/tekton/pipelinerun.yaml" \
-  "${ROOT}/ansible-k8s/manifests/semana-4/argocd/application.yaml"; do
+  "${ROOT}/ansible-k8s/manifests/semana-4/demo/deployment.yaml"; do
   if [[ -f "$f" ]]; then
     sed -i.bak "s|__DOCKER_USER__|${DOCKER_USER}|g; s|__DOCKER_IMAGE__|${DOCKER_USER}/mi-tienda:v1|g" "$f"
     rm -f "${f}.bak"
