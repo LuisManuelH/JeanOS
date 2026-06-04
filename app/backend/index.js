@@ -4,6 +4,10 @@ const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
 const { createClient } = require('redis');
+const client = require('prom-client');
+
+const register = new client.Registry();
+client.collectDefaultMetrics({ register });
 
 const app = express();
 
@@ -41,6 +45,12 @@ app.get('/', (req, res) => {
     status: 'running',
     stack: ['Node.js', 'PostgreSQL', 'Redis'],
   });
+});
+
+// Métricas Prometheus (Semana 3)
+app.get('/metrics', async (req, res) => {
+  res.set('Content-Type', register.contentType);
+  res.end(await register.metrics());
 });
 
 // Liveness probe
