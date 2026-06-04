@@ -21,11 +21,8 @@ cp lab.env.example lab.env    # editar repo GitHub, imagen Docker Hub, usuario
 - Cluster con **Semana 2** OK (`StorageClass` **`nfs-client`**, namespace `jeanos-shop` opcional pero recomendado).
 - Nodos **aarch64**: Kaniko/Tekton usan imágenes multi-arch; app demo debe buildear para `linux/arm64` si el cluster es ARM.
 - Cuenta **Docker Hub** (usuario + Access Token).
-- Repo GitHub **público** con estructura del curso:
-  - `app/Dockerfile` (contexto del pipeline)
-  - `k8s/deployment.yaml` y `k8s/service.yaml` (los lee ArgoCD)
-
-Repo de referencia del curso: `https://github.com/aliothosa/page-public-demo`
+- Repo GitHub **público** con `app/` para Tekton (ej. `aliothosa/page-public-demo`)
+- ArgoCD despliega **`demo/`** en este repo (imagen `__DOCKER_IMAGE__` arm64), no el `k8s/` del curso (amd64 → `exec format error` en ARM)
 
 ## URLs tras el despliegue
 
