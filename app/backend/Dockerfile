@@ -8,6 +8,8 @@ RUN npm install --omit=dev
 
 COPY . .
 
+RUN test -f scripts/preload-redis.js
+
 EXPOSE 3000
 
 CMD ["npm", "start"]
