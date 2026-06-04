@@ -1,0 +1,68 @@
+# Actualizar IPs de node-exporter si tu lab difiere: kubectl get nodes -o wide
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: monitoring
+  labels:
+    app: prometheus
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+
+    scrape_configs:
+      - job_name: prometheus
+        static_configs:
+          - targets: ['localhost:9090']
+
+      - job_name: node-exporter
+        static_configs:
+          - targets:
+              - '192.168.41.154:9100'
+              - '192.168.41.157:9100'
+              - '192.168.41.158:9100'
+
+      - job_name: kube-state-metrics
+        static_configs:
+          - targets: ['kube-state-metrics.monitoring.svc:8080']
+
+      - job_name: jeanos-backend
+        metrics_path: /metrics
+        static_configs:
+          - targets: ['jeanos-backend-service.jeanos-shop.svc:3000']
+            labels:
+              namespace: jeanos-shop
+              app: jeanos-backend
+
+      - job_name: tempo
+        metrics_path: /metrics
+        static_configs:
+          - targets: ['tempo.monitoring.svc:3200']
+            labels:
+              namespace: monitoring
+              app: tempo
+
+      - job_name: kubernetes-pods-annotated
+        kubernetes_sd_configs:
+          - role: pod
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+            action: keep
+            regex: true
+          - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+            action: replace
+            target_label: __metrics_path__
+            regex: (.+)
+          - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+            action: replace
+            regex: ([^:]+)(?::\d+)?;(\d+)
+            replacement: $1:$2
+            target_label: __address__
+          - action: labelmap
+            regex: __meta_kubernetes_pod_label_(.+)
+          - source_labels: [__meta_kubernetes_namespace]
+            target_label: namespace
+          - source_labels: [__meta_kubernetes_pod_name]
+            target_label: pod

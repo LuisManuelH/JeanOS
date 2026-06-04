@@ -14,6 +14,10 @@ spec:
     metadata:
       labels:
         app: jeanos-backend
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "3000"
+        prometheus.io/path: "/metrics"
     spec:
       initContainers:
         - name: wait-for-postgres
@@ -64,6 +68,37 @@ spec:
                 sleep 2
               done
               echo "Redis listo."
+
+        - name: preload-redis
+          image: docker.io/aliothosa/jeanos-backend:v1
+          imagePullPolicy: Always
+          command: ["node", "scripts/preload-redis.js"]
+          env:
+            - name: DB_HOST
+              value: "postgres-service"
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_DB
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: POSTGRES_PASSWORD
+            - name: REDIS_HOST
+              value: "redis-service"
+            - name: REDIS_PORT
+              value: "6379"
+            - name: CACHE_TTL_SECONDS
+              value: "3600"
 
       containers:
         - name: backend

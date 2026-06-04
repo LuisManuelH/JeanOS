@@ -1,0 +1,12 @@
+# Dependencias
+app/backend/node_modules/
+app/frontend/node_modules/
+
+# Build / entorno
+app/frontend/dist/
+.env
+*.log
+
+# Evidencias de despliegue (generadas localmente)
+docs/evidencias/20*/
+docs/evidencias/*.tar.gz
