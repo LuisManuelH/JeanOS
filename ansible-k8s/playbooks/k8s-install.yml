@@ -18,9 +18,10 @@
         mode: '0644'
       tags: hosts
 
-    - name: Copiar /etc/hosts desde el master a todos los nodos
-      copy:
-        src: /etc/hosts
+    # Genera /etc/hosts desde hosts.ini (NO copia el /etc/hosts de tu Mac ni del master).
+    - name: Desplegar /etc/hosts del cluster desde inventario
+      template:
+        src: templates/hosts.cluster.j2
         dest: /etc/hosts
         owner: root
         group: root
@@ -244,6 +245,37 @@
 
 
 # -----------------------------------------------------------------------------
+# PLAY 5b — Red de pods y NodePorts (Semana 2/3/4)
+# -----------------------------------------------------------------------------
+- name: Firewall red de pods y servicios del lab
+  hosts: k8s_cluster
+  become: yes
+
+  tasks:
+    - name: Confiar en el CIDR de pods de Flannel
+      firewalld:
+        source: 10.244.0.0/16
+        zone: trusted
+        permanent: yes
+        immediate: yes
+        state: enabled
+
+    - name: Abrir NodePorts y métricas del lab
+      firewalld:
+        port: "{{ item }}"
+        permanent: yes
+        immediate: yes
+        state: enabled
+      loop:
+        - 9100/tcp    # Node Exporter (hostNetwork)
+        - 30080/tcp   # JeanOS frontend
+        - 30300/tcp   # Grafana
+        - 30900/tcp   # Prometheus
+        - 30443/tcp   # ArgoCD (Semana 4)
+        - 31080/tcp   # App demo Tekton/ArgoCD
+
+
+# -----------------------------------------------------------------------------
 # PLAY 6 — Inicializar Master Node
 # -----------------------------------------------------------------------------
 - name: Inicializar Master Node
@@ -281,28 +313,30 @@
         group: root
         mode: '0600'
 
-    - name: Verificar si Flannel ya está instalado
-      shell: kubectl get pods -n kube-flannel 2>/dev/null | grep -c flannel || echo "0"
-      register: flannel_check
+    - name: Contar pods de Flannel en estado Running
+      shell: |
+        kubectl get pods -n kube-flannel --field-selector=status.phase=Running --no-headers 2>/dev/null | wc -l
+      register: flannel_running
       changed_when: false
+      failed_when: false
 
     - name: Instalar Flannel CNI {{ flannel_version }}
       shell: |
         kubectl apply -f https://github.com/flannel-io/flannel/releases/download/{{ flannel_version }}/kube-flannel.yml
-      when: flannel_check.stdout == "0"
+      when: (flannel_running.stdout | trim | int) < 1
 
     - name: Esperar a que Flannel esté corriendo
       shell: |
-        for i in {1..30}; do
-          READY=$(kubectl get pods -n kube-flannel --no-headers 2>/dev/null | grep -c "Running" || echo 0)
-          if [ "$READY" -gt 0 ]; then
-            echo "Flannel está corriendo"
+        for i in {1..60}; do
+          READY=$(kubectl get pods -n kube-flannel --field-selector=status.phase=Running --no-headers 2>/dev/null | wc -l)
+          if [ "$READY" -ge 1 ]; then
+            echo "Flannel está corriendo ($READY pod(s))"
             exit 0
           fi
-          sleep 2
+          sleep 3
         done
         exit 1
-      when: flannel_check.stdout == "0"
+      when: (flannel_running.stdout | trim | int) < 1
       changed_when: false
 
     - name: Generar token de join fresco
@@ -328,7 +362,7 @@
 
   tasks:
     - name: Verificar si el nodo ya está en el cluster
-      shell: kubectl get nodes | grep {{ inventory_hostname }} || echo "not_found"
+      shell: kubectl get nodes -o wide --no-headers | awk '{print $6}' | grep -Fx '{{ ansible_host }}' || echo "not_found"
       register: node_check
       delegate_to: "{{ groups['k8s_master'][0] }}"
       changed_when: false
@@ -370,8 +404,8 @@
         - "'not_found' in node_check.stdout"
         - join_result.stdout is defined
 
-    - name: Esperar a que el nodo aparezca en el cluster
-      shell: kubectl get nodes | grep {{ inventory_hostname }}
+    - name: Esperar a que el nodo aparezca en el cluster (por IP del inventario)
+      shell: kubectl get nodes -o wide --no-headers | awk '{print $6}' | grep -Fx '{{ ansible_host }}'
       register: node_verify
       delegate_to: "{{ groups['k8s_master'][0] }}"
       until: node_verify.rc == 0
@@ -379,8 +413,15 @@
       delay: 6
       when: "'not_found' in node_check.stdout"
 
+    - name: Obtener nombre del nodo en Kubernetes
+      shell: kubectl get nodes -o wide --no-headers | awk '$6 == "{{ ansible_host }}" {print $1}'
+      register: node_k8s_name
+      delegate_to: "{{ groups['k8s_master'][0] }}"
+      changed_when: false
+      when: "'not_found' in node_check.stdout"
+
     - name: Mostrar estado final del nodo
-      shell: kubectl get nodes {{ inventory_hostname }} -o wide
+      shell: kubectl get nodes {{ node_k8s_name.stdout }} -o wide
       register: node_final
       delegate_to: "{{ groups['k8s_master'][0] }}"
       changed_when: false

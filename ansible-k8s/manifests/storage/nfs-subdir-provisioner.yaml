@@ -95,13 +95,13 @@ spec:
             - name: PROVISIONER_NAME
               value: k8s-sigs.io/nfs-subdir-external-provisioner
             - name: NFS_SERVER
-              value: 192.168.41.154
+              value: 172.16.50.135
             - name: NFS_PATH
               value: /srv/nfs/dynamic
       volumes:
         - name: nfs-client-root
           nfs:
-            server: 192.168.41.154
+            server: 172.16.50.135
             path: /srv/nfs/dynamic
 ---
 apiVersion: storage.k8s.io/v1

@@ -1,0 +1,20 @@
+# Copiar a hosts.ini y poner las IPs de TU lab:
+#   cp hosts.ini.example hosts.ini
+#
+# O ejecutar desde la raíz del repo:
+#   ./scripts/personalizar-lab.sh IP_MASTER IP_WORKER1 IP_WORKER2 USUARIO_DOCKERHUB
+
+[all:vars]
+ansible_user=root
+ansible_ssh_common_args='-o StrictHostKeyChecking=no'
+
+[k8s_master]
+k8s-master01 ansible_host=IP_MASTER
+
+[k8s_workers]
+k8s-worker01 ansible_host=IP_WORKER1
+k8s-worker02 ansible_host=IP_WORKER2
+
+[k8s_cluster:children]
+k8s_master
+k8s_workers
