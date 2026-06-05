@@ -1,23 +1,23 @@
-# ArgoCD Application — landing Semana 4 (GitOps + imagen ARM de Tekton).
+# ArgoCD — sincroniza la tienda jeanOS Shop con el repo del equipo (R6/R7 proyecto final).
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: semana4-gitops-landing
+  name: jeanos-shop-gitops
   namespace: argocd
   labels:
-    app.kubernetes.io/part-of: semana4-gitops
+    app.kubernetes.io/part-of: jeanos-shop
 spec:
   project: default
   source:
     repoURL: https://github.com/aliothosa/JeanOS
     targetRevision: lab/equipo
-    path: ansible-k8s/manifests/semana-4/gitops-landing
+    path: ansible-k8s/manifests/semana-4/jeanos-shop-gitops
   destination:
     server: https://kubernetes.default.svc
-    namespace: semana4-gitops
+    namespace: jeanos-shop
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
-      - CreateNamespace=true
+      - CreateNamespace=false

@@ -1,23 +1,21 @@
 apiVersion: tekton.dev/v1beta1
 kind: Pipeline
 metadata:
-  name: build-and-deploy
+  name: build-jeanos-shop
   namespace: tekton-pipelines
 spec:
   params:
     - name: repo-url
-      description: URL del repositorio Git
       type: string
     - name: revision
-      description: Branch o tag a construir
       type: string
-      default: main
-    - name: image
-      description: "Imagen destino con tag. Ejemplo: usuario/mi-tienda:v1"
+      default: lab/equipo
+    - name: backend-image
+      type: string
+    - name: frontend-image
       type: string
   workspaces:
     - name: shared-source
-      description: Workspace compartido entre las Tasks
   tasks:
     - name: clone
       taskRef:
@@ -31,16 +29,36 @@ spec:
         - name: source
           workspace: shared-source
 
-    - name: build-push
+    - name: build-backend
       taskRef:
         name: build-push
       runAfter:
         - clone
       params:
         - name: image
-          value: $(params.image)
+          value: $(params.backend-image)
         - name: context
-          value: app
+          value: app/backend
+        - name: dockerfile
+          value: ./Dockerfile
+      workspaces:
+        - name: source
+          workspace: shared-source
+        - name: docker-credentials
+          workspace: shared-source
+
+    - name: build-frontend
+      taskRef:
+        name: build-push
+      runAfter:
+        - clone
+      params:
+        - name: image
+          value: $(params.frontend-image)
+        - name: context
+          value: app/frontend
+        - name: dockerfile
+          value: ./Dockerfile
       workspaces:
         - name: source
           workspace: shared-source

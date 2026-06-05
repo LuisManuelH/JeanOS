@@ -1,0 +1,9 @@
+# Manifiestos de la tienda que ArgoCD sincroniza (Semana 4 — proyecto jeanOS Shop).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: jeanos-shop
+resources:
+  - ../../backend/backend-deployment.yaml
+  - ../../backend/backend-service.yaml
+  - ../../frontend/frontend-deployment.yaml
+  - ../../frontend/frontend-service.yaml

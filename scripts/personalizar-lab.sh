@@ -47,19 +47,10 @@ for f in \
   rm -f "${f}.bak"
 done
 
-echo "==> Semana 4 (lab.env.example + placeholders Tekton/ArgoCD)"
+echo "==> Semana 4 (lab.env.example — CI/CD jeanOS Shop)"
 LAB_EX="${ROOT}/ansible-k8s/lab.env.example"
 sed -i.bak "s|__DOCKER_USER__|${DOCKER_USER}|g" "${LAB_EX}"
 rm -f "${LAB_EX}.bak"
-for f in \
-  "${ROOT}/ansible-k8s/manifests/semana-4/tekton/pipelinerun.yaml" \
-  "${ROOT}/ansible-k8s/manifests/semana-4/gitops-landing/deployment.yaml" \
-  "${ROOT}/ansible-k8s/manifests/semana-4/tekton/pipelinerun.yaml"; do
-  if [[ -f "$f" ]]; then
-    sed -i.bak "s|__DOCKER_USER__|${DOCKER_USER}|g; s|__DOCKER_IMAGE__|${DOCKER_USER}/semana4-landing:v1|g" "$f"
-    rm -f "${f}.bak"
-  fi
-done
 
 echo "Listo. Revisa: ansible-k8s/inventory/hosts.ini"
 echo "Semana 4: cp ansible-k8s/lab.env.example lab.env y añade DOCKER_TOKEN → ./ansible-k8s/deploy-semana4.sh --yes"

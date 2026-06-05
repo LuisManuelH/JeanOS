@@ -1,6 +1,6 @@
 # Clase 4 - Tekton + ArgoCD: GitOps CI/CD
 
-> **Manifests para replicar en el lab del equipo:** usa `ansible-k8s/manifests/semana-4/` y `./ansible-k8s/deploy-semana4.sh`. Esta carpeta `examples/tekton-argocd/` conserva la guía detallada del curso.
+> **Proyecto final jeanOS (G-09):** usa `ansible-k8s/manifests/semana-4/` + `deploy-semana4.sh` (Tekton/ArgoCD sobre **jeanos-shop**). Esta carpeta es el **tutorial de clase** con `page-public-demo`, no la entrega del proyecto.
 
 ## Objetivo
 

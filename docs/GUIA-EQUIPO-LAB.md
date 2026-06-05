@@ -126,7 +126,7 @@ Manifests del equipo: **`ansible-k8s/manifests/semana-4/`** + script **`ansible-
 2. `cd ansible-k8s && cp lab.env.example lab.env` → editar `GITHUB_REPO_URL`, `DOCKER_TOKEN`, etc.
 3. Copiar al master: `scp -r ansible-k8s root@IP_MASTER:/root/JeanOS/`
 4. En el master: `chmod +x deploy-semana4.sh && ./deploy-semana4.sh --yes`
-5. ArgoCD UI: `https://IP_NODO:30443` — landing Semana 4: `http://IP_NODO:31080` (ns `semana4-gitops`)
+5. ArgoCD UI: `https://IP_NODO:30443` — app **`jeanos-shop-gitops`** sincroniza la tienda en `jeanos-shop` (`:30080`)
 
 **CLI en ARM64:** `tkn_*_Linux_arm64.tar.gz`, `argocd-linux-arm64`
 

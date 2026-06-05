@@ -58,9 +58,11 @@ fi
 source "${LAB_ENV}"
 
 : "${GITHUB_REPO_URL:?Define GITHUB_REPO_URL en lab.env}"
-: "${DOCKER_IMAGE:?Define DOCKER_IMAGE en lab.env}"
+: "${DOCKER_BACKEND_IMAGE:?Define DOCKER_BACKEND_IMAGE en lab.env}"
+: "${DOCKER_FRONTEND_IMAGE:?Define DOCKER_FRONTEND_IMAGE en lab.env}"
 : "${DOCKER_USERNAME:?Define DOCKER_USERNAME en lab.env}"
-PIPELINE_RUN_NAME="${PIPELINE_RUN_NAME:-build-and-deploy-run-1}"
+GITHUB_REVISION="${GITHUB_REVISION:-lab/equipo}"
+PIPELINE_RUN_NAME="${PIPELINE_RUN_NAME:-jeanos-shop-build-run-1}"
 ARGOCD_ADMIN_PASSWORD="${ARGOCD_ADMIN_PASSWORD:-jeanos2026}"
 
 set_argocd_admin_password() {
@@ -83,9 +85,20 @@ set_argocd_admin_password() {
 render() {
   local src="$1"
   sed -e "s|__GITHUB_REPO_URL__|${GITHUB_REPO_URL}|g" \
-      -e "s|__DOCKER_IMAGE__|${DOCKER_IMAGE}|g" \
-      -e "s|build-and-deploy-run-1|${PIPELINE_RUN_NAME}|g" \
+      -e "s|__GITHUB_REVISION__|${GITHUB_REVISION}|g" \
+      -e "s|__DOCKER_BACKEND_IMAGE__|${DOCKER_BACKEND_IMAGE}|g" \
+      -e "s|__DOCKER_FRONTEND_IMAGE__|${DOCKER_FRONTEND_IMAGE}|g" \
+      -e "s|jeanos-shop-build-run-1|${PIPELINE_RUN_NAME}|g" \
       "${src}"
+}
+
+cleanup_legacy_argocd_apps() {
+  for app in mi-tienda semana4-gitops-landing; do
+    kubectl delete application "${app}" -n argocd --wait=false 2>/dev/null || true
+  done
+  for ns in demo semana4-gitops; do
+    kubectl delete ns "${ns}" --wait=false 2>/dev/null || true
+  done
 }
 
 log "Comprobar StorageClass nfs-client"
@@ -122,7 +135,7 @@ kubectl create secret docker-registry docker-credentials \
 log "Tasks y Pipeline Tekton"
 kubectl apply -f "${TEKTON}/task-git-clone.yaml"
 kubectl apply -f "${TEKTON}/task-build-push.yaml"
-kubectl apply -f "${TEKTON}/pipeline-build-deploy.yaml"
+kubectl apply -f "${TEKTON}/pipeline-build-jeanos.yaml"
 
 if ! $SKIP_PIPELINE; then
   log "PipelineRun ${PIPELINE_RUN_NAME}"
@@ -149,19 +162,12 @@ if ! $SKIP_ARGOCD; then
     set_argocd_admin_password
   fi
 
-  log "ArgoCD Application semana4-gitops-landing → namespace semana4-gitops"
-  render "${ARGOCD_MANIFEST}" | kubectl apply -f -
-  if kubectl get application mi-tienda -n argocd >/dev/null 2>&1; then
-    log "Quitar Application antigua mi-tienda (curso)"
-    kubectl delete application mi-tienda -n argocd --wait=false
-  fi
-  if kubectl get ns demo >/dev/null 2>&1; then
-    log "Quitar namespace antiguo demo (opcional: borra pods viejos)"
-    kubectl delete ns demo --wait=false 2>/dev/null || true
-  fi
+  cleanup_legacy_argocd_apps
+  log "ArgoCD Application jeanos-shop-gitops → namespace jeanos-shop"
+  kubectl apply -f "${ARGOCD_MANIFEST}"
 fi
 
 log "Semana 4 manifests aplicados."
-echo "  ArgoCD:  https://<IP-NODO>:30443  (admin / ${ARGOCD_ADMIN_PASSWORD})"
-echo "  Landing GitOps: http://<IP-NODO>:31080  (ns semana4-gitops)"
-echo "  JeanOS:   http://<IP-NODO>:30080"
+echo "  ArgoCD:      https://<IP-NODO>:30443  (admin / ${ARGOCD_ADMIN_PASSWORD})"
+echo "  jeanOS Shop: http://<IP-NODO>:30080  (app jeanos-shop-gitops en ArgoCD)"
+echo "  Demo clase:  comparador Redis vs Postgres en la tienda (proyecto final G-09)"

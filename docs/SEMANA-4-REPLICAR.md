@@ -1,154 +1,102 @@
-# Semana 4 — Replicar Tekton + ArgoCD (equipo)
+# Semana 4 — CI/CD jeanOS Shop (proyecto final G-09)
 
-Guía única para repetir el lab. Manifests en **`ansible-k8s/manifests/semana-4/`**, script **`ansible-k8s/deploy-semana4.sh`**.
+Alineado con **R6/R7** del documento del curso: Tekton + ArgoCD sobre **tu tienda**, no una app aparte.
 
-Lab completo (Semanas 2–4, IPs, firewall): **`docs/GUIA-EQUIPO-LAB.md`**.
+- **Tutorial de clase** (solo referencia): `examples/tekton-argocd/` + repo `page-public-demo`
+- **Proyecto jeanOS**: este repo + `ansible-k8s/manifests/semana-4/`
 
-## Obtener el código
+Lab completo: **`docs/GUIA-EQUIPO-LAB.md`**
+
+## Qué hace Semana 4 en jeanOS
+
+| Pieza | Función |
+|-------|---------|
+| **Tekton** | Clona **JeanOS**, construye `app/backend` y `app/frontend`, push a Docker Hub |
+| **ArgoCD** | Sincroniza **backend + frontend** en `jeanos-shop` desde Git |
+| **Demo en clase (G-09)** | Latencia comparador Redis vs PostgreSQL en **:30080** |
+
+## Obtener código
 
 ```bash
-git fetch origin
-git checkout lab/equipo
-git pull origin lab/equipo
+git fetch origin && git checkout lab/equipo && git pull
 ```
 
-Si tu equipo usa `main` y aún no tiene Semana 4:
+## Checklist
+
+- [ ] Semana 2: tienda en `jeanos-shop` (`deploy-jeanos.sh`)
+- [ ] `nfs-client`, Postgres, Redis OK
+- [ ] Docker Hub + `DOCKER_TOKEN` en `lab.env`
+- [ ] Nodos **ARM64** (`podman build --platform linux/arm64`)
+
+## Personalizar
 
 ```bash
-git checkout main && git pull
-git fetch origin lab/equipo
-git checkout origin/lab/equipo -- ansible-k8s/manifests/semana-4 ansible-k8s/deploy-semana4.sh ansible-k8s/lab.env.example docs/SEMANA-4-REPLICAR.md
+./scripts/personalizar-lab.sh IP_MASTER IP_W1 IP_W2 USUARIO_DOCKERHUB
+cd ansible-k8s && cp lab.env.example lab.env
 ```
 
-## Checklist antes de Semana 4
-
-- [ ] Semana 2 OK (`kubectl get pods -n jeanos-shop`)
-- [ ] `kubectl get storageclass nfs-client`
-- [ ] Cuenta Docker Hub + **Access Token**
-- [ ] Repo GitHub público con carpeta **`app/`** para Tekton (ej. `aliothosa/page-public-demo`)
-- [ ] Semana 2 y 3 hechas (NFS, tienda, monitoreo opcional pero recomendado)
-- [ ] Nodos **ARM64**: ArgoCD usa `gitops-landing/` en este repo, no el `k8s/` del curso (imagen amd64)
-
-## Personalizar (cada alumno)
+`lab.env`:
 
 ```bash
-# Desde la raíz del repo
-./scripts/personalizar-lab.sh IP_MASTER IP_WORKER1 IP_WORKER2 TU_USUARIO_DOCKERHUB
-
-cd ansible-k8s
-cp lab.env.example lab.env
-```
-
-Editar **`ansible-k8s/lab.env`**:
-
-```bash
-GITHUB_REPO_URL=https://github.com/TU_USUARIO/page-public-demo
-DOCKER_IMAGE=TU_USUARIO/semana4-landing:v1
+GITHUB_REPO_URL=https://github.com/aliothosa/JeanOS
+GITHUB_REVISION=lab/equipo
+DOCKER_BACKEND_IMAGE=TU_USUARIO/jeanos-backend:v1
+DOCKER_FRONTEND_IMAGE=TU_USUARIO/jeanos-frontend:v1
 DOCKER_USERNAME=TU_USUARIO
-DOCKER_TOKEN=tu_token_de_docker_hub
-PIPELINE_RUN_NAME=build-and-deploy-run-1
+DOCKER_TOKEN=...
+PIPELINE_RUN_NAME=jeanos-shop-build-run-1
 ARGOCD_ADMIN_PASSWORD=jeanos2026
 ```
 
-**No commitear `lab.env`** (contiene el token).
-
-## Desplegar (solo en el master, con kubectl)
+## Desplegar (master)
 
 ```bash
-# Copiar repo al master si trabajas desde Mac
 scp -r ansible-k8s root@IP_MASTER:/root/JeanOS/
-
 ssh root@IP_MASTER
 cd /root/JeanOS/ansible-k8s
-chmod +x deploy-semana4.sh
 ./deploy-semana4.sh --yes
+tkn pipelinerun logs jeanos-shop-build-run-1 -f -n tekton-pipelines
 ```
 
-Seguir logs Tekton:
-
-```bash
-tkn pipelinerun logs build-and-deploy-run-1 -f -n tekton-pipelines
-```
-
-## Validar
+## Validar (proyecto final)
 
 | Qué | Cómo |
 |-----|------|
-| Pipeline OK | `tkn pipelinerun describe build-and-deploy-run-1 -n tekton-pipelines` → Succeeded |
-| Imagen en Hub | `TU_USUARIO/semana4-landing:v1` |
-| ArgoCD | `kubectl get application semana4-gitops-landing -n argocd` → Synced, Healthy |
-| Landing | http://IP_WORKER:31080 (`kubectl get pods -n semana4-gitops`) |
-| UI ArgoCD | https://IP_WORKER:30443 |
+| Pipeline | `tkn pipelinerun describe jeanos-shop-build-run-1 -n tekton-pipelines` → Succeeded |
+| ArgoCD | App **`jeanos-shop-gitops`** → Synced, Healthy |
+| Tienda | http://IP_WORKER:30080 — comparador, productos |
+| WOW G-09 | DevTools: comparador &lt;5ms (Redis); matar pod Redis → init recarga |
+| ArgoCD UI | https://IP_WORKER:30443 (`admin` / `jeanos2026`) |
 
-Login ArgoCD (definido en manifest del lab, no aleatorio):
+## WOW moment (commit → deploy)
 
-| Campo | Valor |
-|-------|--------|
-| Usuario | `admin` |
-| Contraseña | `jeanos2026` (o `ARGOCD_ADMIN_PASSWORD` en `lab.env`) |
-
-Manifest: `ansible-k8s/manifests/semana-4/argocd/argocd-admin-password.yaml` (hash bcrypt, no texto plano).
-
-Si instalaste ArgoCD a mano sin el script, aplica ese YAML o saca la aleatoria:
-
-```bash
-kubectl -n argocd get secret argocd-initial-admin-secret \
-  -o jsonpath="{.data.password}" | base64 -d; echo
-```
+1. Cambio en `app/backend` o tag en manifests → commit/push a `lab/equipo`
+2. PipelineRun (o webhook) construye imágenes
+3. ArgoCD sincroniza → rollout en `jeanos-shop`
+4. Mostrar en ArgoCD UI + tienda :30080
 
 ## Relanzar pipeline
 
 ```bash
-kubectl delete pipelinerun build-and-deploy-run-1 -n tekton-pipelines
-# En lab.env: PIPELINE_RUN_NAME=build-and-deploy-run-2
+kubectl delete pipelinerun jeanos-shop-build-run-1 -n tekton-pipelines
+# PIPELINE_RUN_NAME=jeanos-shop-build-run-2 en lab.env
 ./deploy-semana4.sh --yes --skip-tekton --skip-argocd
 ```
 
-## Firewall (3 nodos)
-
-```bash
-for port in 30443 31080; do
-  firewall-cmd --add-port=${port}/tcp --permanent
-done
-firewall-cmd --reload
-```
-
-## Cluster ARM64
-
-Los nodos del lab son **aarch64**. El repo demo debe poder construir imagen ARM (Kaniko en nodo ARM genera arm64). JeanOS ya usa `podman build --platform linux/arm64`.
-
-## URLs del lab (cambiar IP por la de tu worker)
-
-| Servicio | URL |
-|----------|-----|
-| Tienda JeanOS | http://IP_WORKER:30080 |
-| Landing GitOps (Semana 4) | http://IP_WORKER:31080 |
-| ArgoCD | https://IP_WORKER:30443 |
-| Grafana | http://IP_WORKER:30300 |
-| Prometheus | http://IP_WORKER:30900 |
-
-## Archivos del equipo (referencia)
+## Estructura manifests
 
 ```
-ansible-k8s/
-├── lab.env.example
-├── deploy-semana4.sh
-└── manifests/semana-4/
-    ├── tekton/                         # CI: clone + Kaniko
-    ├── argocd/
-    │   ├── application.yaml            # semana4-gitops-landing
-    │   └── argocd-admin-password.yaml  # admin / jeanos2026 (bcrypt)
-    └── gitops-landing/                 # Deployment + Service :31080 (ARM)
+ansible-k8s/manifests/semana-4/
+├── tekton/                    # clone + build backend + frontend
+├── argocd/
+│   ├── application.yaml       # jeanos-shop-gitops
+│   └── argocd-admin-password.yaml
+└── jeanos-shop-gitops/
+    └── kustomization.yaml     # backend + frontend en jeanos-shop
 ```
 
-## Problemas frecuentes
+Postgres/Redis/NFS siguen con `deploy-jeanos.sh` (Semana 2); ArgoCD no los borra.
 
-| Síntoma | Qué revisar |
-|---------|-------------|
-| Landing CrashLoop `exec format error` | Imagen amd64; usar `gitops-landing/` + imagen Tekton en Hub |
-| `ImagePullBackOff` semana4-landing | Ejecutar PipelineRun o retaguear `mi-tienda:v1` → `semana4-landing:v1` en Docker Hub |
-| Sigue `mi-tienda` en ArgoCD UI | `kubectl delete application mi-tienda -n argocd` y namespace `demo` |
-| ArgoCD login falla | Usar **https**, usuario `admin`, contraseña `jeanos2026`; o aplicar `argocd-admin-password.yaml` |
-| PipelineRun falla push | `DOCKER_TOKEN` en `lab.env`, secret `docker-credentials` en `tekton-pipelines` |
-| PVC pendiente | `kubectl get sc` → debe existir **nfs-client** (Semana 2) |
-| ArgoCD install CRD error | El script usa `kubectl apply --server-side`; no aplicar install.yaml a mano sin eso |
+## Firewall
+
+Puertos: `30080`, `30443` (+ monitoreo si aplica).
