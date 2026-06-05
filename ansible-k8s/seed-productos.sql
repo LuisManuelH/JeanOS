@@ -67,10 +67,15 @@ CREATE TABLE IF NOT EXISTS producto_specs (
 -- Compatibilidad si productos existía sin UNIQUE (CREATE IF NOT EXISTS no altera la tabla)
 DO $$
 BEGIN
-  ALTER TABLE productos
-    ADD CONSTRAINT productos_clase_id_modelo_key UNIQUE (clase_id, modelo);
-EXCEPTION
-  WHEN duplicate_object THEN NULL;
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conrelid = 'public.productos'::regclass
+      AND conname = 'productos_clase_id_modelo_key'
+  ) THEN
+    ALTER TABLE productos
+      ADD CONSTRAINT productos_clase_id_modelo_key UNIQUE (clase_id, modelo);
+  END IF;
 END $$;
 
 -- ---------------------------------------------------------------------------

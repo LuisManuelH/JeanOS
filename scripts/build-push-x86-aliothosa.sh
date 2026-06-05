@@ -7,6 +7,8 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 REGISTRY="${REGISTRY:-docker.io/aliothosa}"
 TAG="${TAG:-v1}"
 PLATFORM="${PLATFORM:-linux/amd64}"
+BACK_NAME="${DOCKER_BACKEND_IMAGE:-jeanos-backend}"
+FRONT_NAME="${DOCKER_FRONTEND_IMAGE:-jeanos-frontend}"
 
 if command -v podman >/dev/null 2>&1; then
   BUILDER=podman
@@ -31,9 +33,9 @@ build_push() {
   "${BUILDER}" push "${image}"
 }
 
-build_push "${ROOT}/app/backend" "jeanos-backend"
-build_push "${ROOT}/app/frontend" "jeanos-frontend"
+build_push "${ROOT}/app/backend" "${BACK_NAME}"
+build_push "${ROOT}/app/frontend" "${FRONT_NAME}"
 
 echo "Listo:"
-echo "  ${REGISTRY}/jeanos-backend:${TAG}"
-echo "  ${REGISTRY}/jeanos-frontend:${TAG}"
+echo "  ${REGISTRY}/${BACK_NAME}:${TAG}"
+echo "  ${REGISTRY}/${FRONT_NAME}:${TAG}"
