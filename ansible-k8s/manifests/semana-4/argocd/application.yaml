@@ -1,4 +1,4 @@
-# ArgoCD — sincroniza la tienda jeanOS Shop con el repo del equipo (R6/R7 proyecto final).
+# ArgoCD — sincroniza backend + frontend de jeanOS Shop (R6/R7 proyecto final G-09).
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -11,7 +11,10 @@ spec:
   source:
     repoURL: https://github.com/aliothosa/JeanOS
     targetRevision: lab/equipo
-    path: ansible-k8s/manifests/semana-4/jeanos-shop-gitops
+    path: ansible-k8s/manifests
+    directory:
+      include: "{backend/*,frontend/*}"
+      recurse: false
   destination:
     server: https://kubernetes.default.svc
     namespace: jeanos-shop

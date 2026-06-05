@@ -12,7 +12,7 @@ cp lab.env.example lab.env
 
 | Recurso | Nombre |
 |---------|--------|
-| ArgoCD Application | `jeanos-shop-gitops` |
+| ArgoCD Application | `jeanos-shop-gitops` (sync `backend/` + `frontend/`) |
 | Namespace | `jeanos-shop` |
 | Pipeline | `build-jeanos-shop` |
 | URL tienda | http://\<IP-NODO\>:30080 |

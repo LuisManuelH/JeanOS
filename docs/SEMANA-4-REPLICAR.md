@@ -91,8 +91,7 @@ ansible-k8s/manifests/semana-4/
 ├── argocd/
 │   ├── application.yaml       # jeanos-shop-gitops
 │   └── argocd-admin-password.yaml
-└── jeanos-shop-gitops/
-    └── kustomization.yaml     # backend + frontend en jeanos-shop
+    # Application incluye solo backend/* y frontend/* en jeanos-shop
 ```
 
 Postgres/Redis/NFS siguen con `deploy-jeanos.sh` (Semana 2); ArgoCD no los borra.
