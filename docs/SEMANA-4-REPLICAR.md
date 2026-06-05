@@ -160,7 +160,7 @@ Ejemplo (ajusta rama e imágenes):
 
 ```bash
 GITHUB_REPO_URL=https://github.com/aliothosa/JeanOS
-GITHUB_REVISION=lab/x86-aliothosa
+GITHUB_REVISION=main
 
 DOCKER_BACKEND_IMAGE=aliothosa/jeanos-backend:v1
 DOCKER_FRONTEND_IMAGE=aliothosa/jeanos-frontend:v1
@@ -292,7 +292,7 @@ Si Semana 3 falla **después** de Semana 4, suele ser firewall o recursos; ArgoC
 
 Flujo para demostrar CI/CD en clase:
 
-1. Cambio en `app/backend` o en tag de imagen en manifests → **commit + push** a tu rama (`lab/equipo` o `lab/x86-aliothosa`).
+1. Cambio en `app/backend` o en tag de imagen en manifests → **commit + push** a `main` (o la rama definida en `lab.env` / ArgoCD `targetRevision`).
 2. Relanzar pipeline (Paso 8) → nuevas imágenes en Docker Hub.
 3. ArgoCD detecta cambios en Git → sync → rollout en `jeanos-shop`.
 4. Mostrar en UI ArgoCD + tienda `:30080` + (opcional) métricas en Grafana.
