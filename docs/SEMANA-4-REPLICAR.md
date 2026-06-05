@@ -27,7 +27,7 @@ git checkout origin/lab/equipo -- ansible-k8s/manifests/semana-4 ansible-k8s/dep
 - [ ] Cuenta Docker Hub + **Access Token**
 - [ ] Repo GitHub público con carpeta **`app/`** para Tekton (ej. `aliothosa/page-public-demo`)
 - [ ] Semana 2 y 3 hechas (NFS, tienda, monitoreo opcional pero recomendado)
-- [ ] Nodos **ARM64**: la demo ArgoCD usa manifests en este repo (`demo/`), no el `k8s/` del curso (imagen amd64)
+- [ ] Nodos **ARM64**: ArgoCD usa `gitops-landing/` en este repo, no el `k8s/` del curso (imagen amd64)
 
 ## Personalizar (cada alumno)
 
@@ -43,7 +43,7 @@ Editar **`ansible-k8s/lab.env`**:
 
 ```bash
 GITHUB_REPO_URL=https://github.com/TU_USUARIO/page-public-demo
-DOCKER_IMAGE=TU_USUARIO/mi-tienda:v1
+DOCKER_IMAGE=TU_USUARIO/semana4-landing:v1
 DOCKER_USERNAME=TU_USUARIO
 DOCKER_TOKEN=tu_token_de_docker_hub
 PIPELINE_RUN_NAME=build-and-deploy-run-1
@@ -75,9 +75,9 @@ tkn pipelinerun logs build-and-deploy-run-1 -f -n tekton-pipelines
 | Qué | Cómo |
 |-----|------|
 | Pipeline OK | `tkn pipelinerun describe build-and-deploy-run-1 -n tekton-pipelines` → Succeeded |
-| Imagen en Hub | Ver repositorio `TU_USUARIO/mi-tienda` tag `v1` |
-| ArgoCD | `kubectl get application -n argocd` → Synced, Healthy |
-| App | http://IP_WORKER:31080 |
+| Imagen en Hub | `TU_USUARIO/semana4-landing:v1` |
+| ArgoCD | `kubectl get application semana4-gitops-landing -n argocd` → Synced, Healthy |
+| Landing | http://IP_WORKER:31080 (`kubectl get pods -n semana4-gitops`) |
 | UI ArgoCD | https://IP_WORKER:30443 |
 
 Login ArgoCD (definido en manifest del lab, no aleatorio):
@@ -122,7 +122,7 @@ Los nodos del lab son **aarch64**. El repo demo debe poder construir imagen ARM 
 | Servicio | URL |
 |----------|-----|
 | Tienda JeanOS | http://IP_WORKER:30080 |
-| Demo GitOps | http://IP_WORKER:31080 |
+| Landing GitOps (Semana 4) | http://IP_WORKER:31080 |
 | ArgoCD | https://IP_WORKER:30443 |
 | Grafana | http://IP_WORKER:30300 |
 | Prometheus | http://IP_WORKER:30900 |
@@ -136,16 +136,18 @@ ansible-k8s/
 └── manifests/semana-4/
     ├── tekton/                         # CI: clone + Kaniko
     ├── argocd/
-    │   ├── application.yaml            # GitOps → namespace demo
+    │   ├── application.yaml            # semana4-gitops-landing
     │   └── argocd-admin-password.yaml  # admin / jeanos2026 (bcrypt)
-    └── demo/                           # Deployment + Service :31080 (ARM)
+    └── gitops-landing/                 # Deployment + Service :31080 (ARM)
 ```
 
 ## Problemas frecuentes
 
 | Síntoma | Qué revisar |
 |---------|-------------|
-| Demo CrashLoop `exec format error` | Imagen amd64; usar `demo/` de JeanOS + imagen de Tekton en Hub |
+| Landing CrashLoop `exec format error` | Imagen amd64; usar `gitops-landing/` + imagen Tekton en Hub |
+| `ImagePullBackOff` semana4-landing | Ejecutar PipelineRun o retaguear `mi-tienda:v1` → `semana4-landing:v1` en Docker Hub |
+| Sigue `mi-tienda` en ArgoCD UI | `kubectl delete application mi-tienda -n argocd` y namespace `demo` |
 | ArgoCD login falla | Usar **https**, usuario `admin`, contraseña `jeanos2026`; o aplicar `argocd-admin-password.yaml` |
 | PipelineRun falla push | `DOCKER_TOKEN` en `lab.env`, secret `docker-credentials` en `tekton-pipelines` |
 | PVC pendiente | `kubectl get sc` → debe existir **nfs-client** (Semana 2) |

@@ -1,23 +1,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: page-demo
-  namespace: demo
+  name: gitops-landing
+  namespace: semana4-gitops
   labels:
-    app: page-demo
+    app: gitops-landing
+    app.kubernetes.io/part-of: semana4-gitops
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: page-demo
+      app: gitops-landing
   template:
     metadata:
       labels:
-        app: page-demo
+        app: gitops-landing
     spec:
       containers:
-        - name: page-demo
-          image: emmanuelmal2/mi-tienda:v1
+        - name: gitops-landing
+          image: emmanuelmal2/semana4-landing:v1
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80

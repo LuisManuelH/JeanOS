@@ -149,11 +149,19 @@ if ! $SKIP_ARGOCD; then
     set_argocd_admin_password
   fi
 
-  log "ArgoCD Application mi-tienda → namespace demo"
+  log "ArgoCD Application semana4-gitops-landing → namespace semana4-gitops"
   render "${ARGOCD_MANIFEST}" | kubectl apply -f -
+  if kubectl get application mi-tienda -n argocd >/dev/null 2>&1; then
+    log "Quitar Application antigua mi-tienda (curso)"
+    kubectl delete application mi-tienda -n argocd --wait=false
+  fi
+  if kubectl get ns demo >/dev/null 2>&1; then
+    log "Quitar namespace antiguo demo (opcional: borra pods viejos)"
+    kubectl delete ns demo --wait=false 2>/dev/null || true
+  fi
 fi
 
 log "Semana 4 manifests aplicados."
 echo "  ArgoCD:  https://<IP-NODO>:30443  (admin / ${ARGOCD_ADMIN_PASSWORD})"
-echo "  App demo: http://<IP-NODO>:31080"
+echo "  Landing GitOps: http://<IP-NODO>:31080  (ns semana4-gitops)"
 echo "  JeanOS:   http://<IP-NODO>:30080"

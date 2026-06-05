@@ -14,7 +14,7 @@ spec:
     - name: revision
       value: main
     - name: image
-      value: "emmanuelmal2/mi-tienda:v1"
+      value: "emmanuelmal2/semana4-landing:v1"
   workspaces:
     - name: shared-source
       volumeClaimTemplate:

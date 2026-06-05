@@ -13,7 +13,8 @@ cp lab.env.example lab.env    # editar repo GitHub, imagen Docker Hub, usuario
 | Carpeta / archivo | Qué despliega |
 |-------------------|---------------|
 | `tekton/` | Tasks, Pipeline y PipelineRun (CI: clone + build Kaniko + push) |
-| `argocd/application.yaml` | Application GitOps hacia namespace `demo` |
+| `argocd/application.yaml` | Application `semana4-gitops-landing` |
+| `gitops-landing/` | Deployment + Service (ns `semana4-gitops`, :31080) |
 | `argocd/argocd-admin-password.yaml` | Hash bcrypt admin (`jeanos2026` por defecto en el lab) |
 | `lab.env.example` | Variables del lab (copiar a `lab.env`) |
 
@@ -23,14 +24,14 @@ cp lab.env.example lab.env    # editar repo GitHub, imagen Docker Hub, usuario
 - Nodos **aarch64**: Kaniko/Tekton usan imágenes multi-arch; app demo debe buildear para `linux/arm64` si el cluster es ARM.
 - Cuenta **Docker Hub** (usuario + Access Token).
 - Repo GitHub **público** con `app/` para Tekton (ej. `aliothosa/page-public-demo`)
-- ArgoCD despliega **`demo/`** en este repo (imagen `__DOCKER_IMAGE__` arm64), no el `k8s/` del curso (amd64 → `exec format error` en ARM)
+- ArgoCD despliega **`gitops-landing/`** (ns `semana4-gitops`, imagen `__DOCKER_IMAGE__` arm64), no el `k8s/` del curso (amd64)
 
 ## URLs tras el despliegue
 
 | Servicio | NodePort |
 |----------|----------|
 | ArgoCD UI | https://\<IP-NODO\>:30443 |
-| App demo GitOps | http://\<IP-NODO\>:31080 |
+| Landing GitOps (Semana 4) | http://\<IP-NODO\>:31080 |
 | JeanOS Shop (S2) | http://\<IP-NODO\>:30080 |
 
 ## Personalizar IPs / usuario

@@ -1,19 +1,20 @@
-# ArgoCD Application — despliega demo/ (imagen arm64 de Tekton) desde JeanOS lab/equipo.
-# El pipeline Tekton sigue clonando GITHUB_REPO_URL (app/); esta ruta evita imagen amd64 del curso.
+# ArgoCD Application — landing Semana 4 (GitOps + imagen ARM de Tekton).
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: mi-tienda
+  name: semana4-gitops-landing
   namespace: argocd
+  labels:
+    app.kubernetes.io/part-of: semana4-gitops
 spec:
   project: default
   source:
     repoURL: https://github.com/aliothosa/JeanOS
     targetRevision: lab/equipo
-    path: ansible-k8s/manifests/semana-4/demo
+    path: ansible-k8s/manifests/semana-4/gitops-landing
   destination:
     server: https://kubernetes.default.svc
-    namespace: demo
+    namespace: semana4-gitops
   syncPolicy:
     automated:
       prune: true
