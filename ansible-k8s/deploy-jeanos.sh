@@ -104,12 +104,13 @@ kubectl wait --for=jsonpath='{.status.phase}'=Bound pvc -n "$NS" --timeout=300s 
 
 kubectl exec -n "$NS" postgres-0 -- pg_isready -U jeanosadmin -d jeanosdb
 
-# --- Seed ---
+# --- Seed (antes de Redis/backend; incluye clases, productos y specs) ---
 if ! $SKIP_SEED; then
-  log "Paso 4: Seed tabla productos"
-  kubectl exec -i -n "$NS" postgres-0 -- psql -U jeanosadmin -d jeanosdb < "$SEED_SQL"
+  log "Paso 4: Seed catálogo SQL (${SEED_SQL##*/})"
+  kubectl exec -i -n "$NS" postgres-0 -- \
+    psql -v ON_ERROR_STOP=1 -U jeanosadmin -d jeanosdb < "$SEED_SQL"
 else
-  log "Paso 4: seed omitido (--skip-seed)"
+  log "Paso 4: seed omitido (--skip-seed) — el backend exige clases_producto, productos, spec_definitions y producto_specs con datos"
 fi
 
 # --- Capa 5: Redis ---

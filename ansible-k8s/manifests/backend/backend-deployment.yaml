@@ -32,13 +32,28 @@ spec:
                 sleep 2
               done
 
-              echo "PostgreSQL listo. Validando tabla productos..."
-              until psql -h postgres-service -U "$DB_USER" -d "$DB_NAME" -tAc "SELECT COUNT(*) FROM productos;" > /dev/null 2>&1; do
-                echo "La tabla productos aún no está disponible..."
+              echo "PostgreSQL listo. Validando catálogo mínimo en PostgreSQL..."
+              until psql -h postgres-service -U "$DB_USER" -d "$DB_NAME" -v ON_ERROR_STOP=1 -tAc "
+                SELECT
+                  (SELECT COUNT(*) FROM clases_producto) AS clases,
+                  (SELECT COUNT(*) FROM productos) AS productos,
+                  (SELECT COUNT(*) FROM spec_definitions) AS spec_defs,
+                  (SELECT COUNT(*) FROM producto_specs) AS producto_specs;
+              " 2>/dev/null | awk -F'|' '
+                NF == 4 && $1 > 0 && $2 > 0 && $3 > 0 && $4 > 0 { ok=1 }
+                END { exit(ok ? 0 : 1) }
+              '; do
+                echo "Catálogo incompleto (clases_producto, productos, spec_definitions o producto_specs vacíos o tablas aún no creadas). Reintentando..."
                 sleep 2
               done
 
-              echo "Tabla productos validada correctamente."
+              echo "Catálogo validado:"
+              psql -h postgres-service -U "$DB_USER" -d "$DB_NAME" -c "
+                SELECT 'clases_producto' AS tabla, COUNT(*)::text AS filas FROM clases_producto
+                UNION ALL SELECT 'productos', COUNT(*)::text FROM productos
+                UNION ALL SELECT 'spec_definitions', COUNT(*)::text FROM spec_definitions
+                UNION ALL SELECT 'producto_specs', COUNT(*)::text FROM producto_specs;
+              "
           env:
             - name: DB_NAME
               valueFrom:

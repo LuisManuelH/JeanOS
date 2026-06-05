@@ -6,6 +6,7 @@ app/frontend/node_modules/
 app/frontend/dist/
 .env
 ansible-k8s/lab.env
+ansible-k8s/redeploy.env
 *.log
 
 # Evidencias de despliegue (generadas localmente)
