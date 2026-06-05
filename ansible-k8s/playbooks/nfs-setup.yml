@@ -3,7 +3,7 @@
   become: true
 
   vars:
-    nfs_server_ip: "172.16.50.135"
+    nfs_server_ip: "192.168.41.154"
     nfs_export_path: "/srv/nfs/postgres"
     nfs_test_mount: "/mnt/nfs-postgres-test"
 

@@ -9,7 +9,7 @@ spec:
       type: string
     - name: revision
       type: string
-      default: lab/equipo
+      default: lab/x86-aliothosa
     - name: backend-image
       type: string
     - name: frontend-image

@@ -3,11 +3,15 @@ Tienda de Hardware &amp; Componentes de PC
 
 ## Lab del equipo (Semanas 2–4)
 
-Rama **`lab/equipo`**: configuración probada del cluster, monitoreo y notas Tekton/ArgoCD.
+| Rama | Uso |
+|------|-----|
+| **`lab/equipo`** | Cluster **ARM64** — ver `docs/GUIA-EQUIPO-LAB.md` |
+| **`lab/x86-aliothosa`** | Cluster **x86_64** — imágenes `aliothosa/jeanos-*:v1` — ver `docs/GUIA-X86-ALIOTHOSA.md` |
 
-1. `git checkout lab/equipo`
-2. Leer **`docs/GUIA-EQUIPO-LAB.md`** (Semana 3: **`docs/SEMANA-3-REPLICAR.md`** · Semana 4: **`docs/SEMANA-4-REPLICAR.md`**)
+1. `git checkout lab/equipo` o `lab/x86-aliothosa`
+2. Semana 3: **`docs/SEMANA-3-REPLICAR.md`** · Semana 4: **`docs/SEMANA-4-REPLICAR.md`**
 3. Personalizar IPs y Docker Hub: `./scripts/personalizar-lab.sh IP_MASTER IP_W1 IP_W2 TU_USUARIO_HUB`
+4. x86: publicar imágenes con `./scripts/build-push-x86-aliothosa.sh`
 
 ## Despliegue en Kubernetes
 
