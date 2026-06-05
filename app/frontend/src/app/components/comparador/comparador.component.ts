@@ -50,7 +50,7 @@ import {
             Cargando producto...
           </div>
         </ng-template>
-        <p class="partial-hint">Vuelve al catálogo y elige otro producto de <strong>{{ partialProduct?.clase.nombre || 'la misma clase' }}</strong>.</p>
+        <p class="partial-hint">Vuelve al catálogo y elige otro producto de <strong>{{ partialProduct?.clase?.nombre ?? 'la misma clase' }}</strong>.</p>
       </div>
 
       <!-- Loading -->
@@ -98,9 +98,9 @@ import {
           <div
             class="product-card"
             *ngFor="let p of result.data.products"
-            [class.cheapest]="p.id === result.data.cheapest_product?.id"
+            [class.cheapest]="p.id === result.data.cheapest_product.id"
           >
-            <div class="product-rank" *ngIf="p.id === result.data.cheapest_product?.id">MEJOR PRECIO</div>
+            <div class="product-rank" *ngIf="p.id === result.data.cheapest_product.id">MEJOR PRECIO</div>
             <div class="product-id">ID · {{ p.id }}</div>
             <div class="product-name">{{ p.nombre }}</div>
             <div class="product-meta">{{ p.marca }} · {{ p.modelo }}</div>
