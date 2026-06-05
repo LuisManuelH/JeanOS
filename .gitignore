@@ -5,6 +5,7 @@ app/frontend/node_modules/
 # Build / entorno
 app/frontend/dist/
 .env
+ansible-k8s/lab.env
 *.log
 
 # Evidencias de despliegue (generadas localmente)

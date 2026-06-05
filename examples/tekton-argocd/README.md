@@ -1,5 +1,7 @@
 # Clase 4 - Tekton + ArgoCD: GitOps CI/CD
 
+> **Proyecto final jeanOS (G-09):** usa `ansible-k8s/manifests/semana-4/` + `deploy-semana4.sh` (Tekton/ArgoCD sobre **jeanos-shop**). Esta carpeta es el **tutorial de clase** con `page-public-demo`, no la entrega del proyecto.
+
 ## Objetivo
 
 Implementar un pipeline GitOps completo: Tekton construye y publica la imagen de

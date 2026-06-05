@@ -1,0 +1,66 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: build-jeanos-shop
+  namespace: tekton-pipelines
+spec:
+  params:
+    - name: repo-url
+      type: string
+    - name: revision
+      type: string
+      default: lab/equipo
+    - name: backend-image
+      type: string
+    - name: frontend-image
+      type: string
+  workspaces:
+    - name: shared-source
+  tasks:
+    - name: clone
+      taskRef:
+        name: git-clone
+      params:
+        - name: url
+          value: $(params.repo-url)
+        - name: revision
+          value: $(params.revision)
+      workspaces:
+        - name: source
+          workspace: shared-source
+
+    - name: build-backend
+      taskRef:
+        name: build-push
+      runAfter:
+        - clone
+      params:
+        - name: image
+          value: $(params.backend-image)
+        - name: context
+          value: app/backend
+        - name: dockerfile
+          value: ./Dockerfile
+      workspaces:
+        - name: source
+          workspace: shared-source
+        - name: docker-credentials
+          workspace: shared-source
+
+    - name: build-frontend
+      taskRef:
+        name: build-push
+      runAfter:
+        - clone
+      params:
+        - name: image
+          value: $(params.frontend-image)
+        - name: context
+          value: app/frontend
+        - name: dockerfile
+          value: ./Dockerfile
+      workspaces:
+        - name: source
+          workspace: shared-source
+        - name: docker-credentials
+          workspace: shared-source
