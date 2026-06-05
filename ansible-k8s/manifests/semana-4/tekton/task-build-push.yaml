@@ -1,0 +1,45 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: build-push
+  namespace: tekton-pipelines
+spec:
+  params:
+    - name: image
+      description: "Imagen destino. Ejemplo: usuario/mi-tienda:v1"
+      type: string
+    - name: dockerfile
+      description: Ruta al Dockerfile dentro del workspace
+      type: string
+      default: ./Dockerfile
+    - name: context
+      description: Contexto de build (directorio app/)
+      type: string
+      default: .
+  workspaces:
+    - name: source
+      description: Workspace con el código fuente clonado
+    - name: docker-credentials
+      description: Secret de Docker Hub montado como config.json
+  steps:
+    - name: build-and-push
+      image: gcr.io/kaniko-project/executor:v1.19.0
+      args:
+        - --dockerfile=$(params.dockerfile)
+        - --context=$(workspaces.source.path)/$(params.context)
+        - --destination=$(params.image)
+        - --cache=true
+        - --cache-ttl=24h
+      env:
+        - name: DOCKER_CONFIG
+          value: /kaniko/.docker
+      volumeMounts:
+        - name: docker-config
+          mountPath: /kaniko/.docker
+  volumes:
+    - name: docker-config
+      secret:
+        secretName: docker-credentials
+        items:
+          - key: .dockerconfigjson
+            path: config.json

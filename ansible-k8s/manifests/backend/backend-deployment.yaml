@@ -102,7 +102,7 @@ spec:
 
       containers:
         - name: backend
-          image: docker.io/luishahz/jeanos-backend:v1
+          image: docker.io/aliothosa/jeanos-backend:v1
           imagePullPolicy: Always
           ports:
             - containerPort: 3000

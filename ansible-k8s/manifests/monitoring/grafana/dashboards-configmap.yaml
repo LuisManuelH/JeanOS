@@ -1,0 +1,262 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  namespace: monitoring
+  labels:
+    app: grafana
+data:
+  cluster-hardware.json: |
+    {
+      "uid": "jeanos-cluster-hardware",
+      "title": "jeanOS — Hardware del cluster",
+      "tags": ["jeanos", "node-exporter", "hardware"],
+      "schemaVersion": 38,
+      "version": 1,
+      "refresh": "30s",
+      "time": { "from": "now-1h", "to": "now" },
+      "timezone": "browser",
+      "editable": true,
+      "panels": [
+        {
+          "id": 100,
+          "type": "row",
+          "title": "Nodos del cluster (node-exporter)",
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+          "collapsed": false
+        },
+        {
+          "id": 1,
+          "title": "Nodos UP",
+          "type": "stat",
+          "gridPos": { "x": 0, "y": 1, "w": 4, "h": 4 },
+          "options": {
+            "reduceOptions": { "calcs": ["lastNotNull"] },
+            "colorMode": "background",
+            "graphMode": "none"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "red", "value": null },
+                  { "color": "orange", "value": 2 },
+                  { "color": "green", "value": 3 }
+                ]
+              }
+            }
+          },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "expr": "count(up{job=\"node-exporter\"} == 1)",
+              "legendFormat": "UP"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "title": "CPU por nodo (%)",
+          "type": "timeseries",
+          "gridPos": { "x": 4, "y": 1, "w": 10, "h": 8 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "min": 0,
+              "max": 100,
+              "custom": { "lineWidth": 2, "fillOpacity": 15 }
+            }
+          },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "expr": "100 - (avg by (instance) (rate(node_cpu_seconds_total{job=\"node-exporter\",mode=\"idle\"}[5m])) * 100)",
+              "legendFormat": "{{instance}}"
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "title": "Memoria usada por nodo (%)",
+          "type": "timeseries",
+          "gridPos": { "x": 14, "y": 1, "w": 10, "h": 8 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "min": 0,
+              "max": 100,
+              "custom": { "lineWidth": 2, "fillOpacity": 15 }
+            }
+          },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "expr": "(1 - (node_memory_MemAvailable_bytes{job=\"node-exporter\"} / node_memory_MemTotal_bytes{job=\"node-exporter\"})) * 100",
+              "legendFormat": "{{instance}}"
+            }
+          ]
+        },
+        {
+          "id": 4,
+          "title": "Disco raíz (%)",
+          "type": "timeseries",
+          "gridPos": { "x": 0, "y": 9, "w": 12, "h": 8 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "min": 0,
+              "max": 100,
+              "custom": { "lineWidth": 2, "fillOpacity": 10 }
+            }
+          },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "expr": "(1 - (node_filesystem_avail_bytes{job=\"node-exporter\",mountpoint=\"/\",fstype!=\"rootfs\"} / node_filesystem_size_bytes{job=\"node-exporter\",mountpoint=\"/\",fstype!=\"rootfs\"})) * 100",
+              "legendFormat": "{{instance}}"
+            }
+          ]
+        },
+        {
+          "id": 5,
+          "title": "Red — recibido (B/s)",
+          "type": "timeseries",
+          "gridPos": { "x": 12, "y": 9, "w": 12, "h": 8 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "Bps",
+              "custom": { "lineWidth": 2, "fillOpacity": 10 }
+            }
+          },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "expr": "sum by (instance) (rate(node_network_receive_bytes_total{job=\"node-exporter\",device!~\"lo|veth.*|cali.*|flannel.*\"}[5m]))",
+              "legendFormat": "{{instance}}"
+            }
+          ]
+        },
+        {
+          "id": 200,
+          "type": "row",
+          "title": "JeanOS Shop (métricas aplicación)",
+          "gridPos": { "h": 1, "w": 24, "x": 0, "y": 17 },
+          "collapsed": false
+        },
+        {
+          "id": 6,
+          "title": "Backend scrape UP",
+          "type": "stat",
+          "gridPos": { "x": 0, "y": 18, "w": 4, "h": 4 },
+          "options": {
+            "reduceOptions": { "calcs": ["lastNotNull"] },
+            "colorMode": "background",
+            "graphMode": "none"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "mappings": [
+                { "type": "value", "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } } }
+              ],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  { "color": "red", "value": null },
+                  { "color": "green", "value": 1 }
+                ]
+              }
+            }
+          },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "expr": "up{job=\"jeanos-backend\"}",
+              "legendFormat": "backend"
+            }
+          ]
+        },
+        {
+          "id": 7,
+          "title": "Pods Running (jeanos-shop)",
+          "type": "stat",
+          "gridPos": { "x": 4, "y": 18, "w": 4, "h": 4 },
+          "options": {
+            "reduceOptions": { "calcs": ["lastNotNull"] },
+            "colorMode": "value",
+            "graphMode": "area"
+          },
+          "fieldConfig": { "defaults": { "unit": "short" } },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "expr": "sum(kube_pod_status_phase{namespace=\"jeanos-shop\",phase=\"Running\"}) or vector(0)",
+              "legendFormat": "running"
+            }
+          ]
+        },
+        {
+          "id": 8,
+          "title": "HTTP requests/s",
+          "type": "timeseries",
+          "gridPos": { "x": 8, "y": 18, "w": 8, "h": 8 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqps",
+              "custom": { "lineWidth": 2, "fillOpacity": 10 }
+            }
+          },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "expr": "sum(rate(jeanos_http_requests_total[5m]))",
+              "legendFormat": "total"
+            }
+          ]
+        },
+        {
+          "id": 9,
+          "title": "Redis hits vs Postgres misses (/s)",
+          "type": "timeseries",
+          "gridPos": { "x": 16, "y": 18, "w": 8, "h": 8 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "ops",
+              "custom": { "lineWidth": 2, "fillOpacity": 10 }
+            }
+          },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "expr": "sum(rate(jeanos_cache_hits_total[5m]))",
+              "legendFormat": "Redis hits"
+            },
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "expr": "sum(rate(jeanos_cache_misses_total[5m]))",
+              "legendFormat": "Postgres misses"
+            }
+          ]
+        },
+        {
+          "id": 10,
+          "title": "Latencia HTTP p95 (s)",
+          "type": "timeseries",
+          "gridPos": { "x": 0, "y": 26, "w": 24, "h": 8 },
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "custom": { "lineWidth": 2, "fillOpacity": 5 }
+            }
+          },
+          "targets": [
+            {
+              "datasource": { "type": "prometheus", "uid": "prometheus" },
+              "expr": "histogram_quantile(0.95, sum(rate(jeanos_http_request_duration_seconds_bucket[5m])) by (le))",
+              "legendFormat": "p95"
+            }
+          ]
+        }
+      ]
+    }

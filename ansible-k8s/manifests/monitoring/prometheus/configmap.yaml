@@ -20,9 +20,9 @@ data:
       - job_name: node-exporter
         static_configs:
           - targets:
-              - '192.168.41.154:9100'
-              - '192.168.41.157:9100'
-              - '192.168.41.158:9100'
+              - '192.168.41.154:9100'   # k8s-master01
+              - '192.168.41.157:9100'   # k8s-worker01
+              - '192.168.41.158:9100'   # k8s-worker02
 
       - job_name: kube-state-metrics
         static_configs:

@@ -1,0 +1,28 @@
+# PipelineRun jeanOS Shop — clona este repo y construye backend + frontend.
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+  name: jeanos-shop-build-run-1
+  namespace: tekton-pipelines
+spec:
+  pipelineRef:
+    name: build-jeanos-shop
+  params:
+    - name: repo-url
+      value: "__GITHUB_REPO_URL__"
+    - name: revision
+      value: "__GITHUB_REVISION__"
+    - name: backend-image
+      value: "__DOCKER_BACKEND_IMAGE__"
+    - name: frontend-image
+      value: "__DOCKER_FRONTEND_IMAGE__"
+  workspaces:
+    - name: shared-source
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          storageClassName: nfs-client
+          resources:
+            requests:
+              storage: 1Gi

@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: docker.io/luishahz/jeanos-frontend:v1
+          image: docker.io/aliothosa/jeanos-frontend:v1
           imagePullPolicy: Always
           ports:
             - containerPort: 80

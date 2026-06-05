@@ -1,0 +1,6 @@
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+
+{{ hostvars[groups['k8s_master'][0]]['ansible_host'] }}  k8s-master01 master
+{{ hostvars[groups['k8s_workers'][0]]['ansible_host'] }}  k8s-worker01 worker01
+{{ hostvars[groups['k8s_workers'][1]]['ansible_host'] }}  k8s-worker02 worker02
