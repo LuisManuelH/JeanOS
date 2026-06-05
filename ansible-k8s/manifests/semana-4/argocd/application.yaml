@@ -13,8 +13,8 @@ spec:
     targetRevision: lab/equipo
     path: ansible-k8s/manifests
     directory:
-      include: "{backend/*,frontend/*}"
-      recurse: false
+      include: "{backend/**,frontend/**}"
+      recurse: true
   destination:
     server: https://kubernetes.default.svc
     namespace: jeanos-shop
