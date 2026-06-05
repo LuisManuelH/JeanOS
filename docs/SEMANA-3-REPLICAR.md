@@ -325,3 +325,9 @@ No hace falta **importar** el dashboard 1860 a mano; viene del ConfigMap al arra
 | Grafana login falla | `admin` / `jeanos2026` (ver `grafana/deployment.yaml`) |
 
 Más detalle: `docs/semana-3-monitoring.md` y `ansible-k8s/manifests/monitoring/README.md`.
+
+---
+
+## Siguiente paso — Semana 4
+
+Con monitoreo y tienda OK, continúa con CI/CD (Tekton + ArgoCD): **`docs/SEMANA-4-REPLICAR.md`**.
