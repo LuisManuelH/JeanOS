@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Personaliza IPs y usuario Docker Hub en los manifests del lab.
+# Ejecutar en el master (/root/JeanOS) o en PC con bash (Linux / WSL / Git Bash).
 # Uso: ./scripts/personalizar-lab.sh 172.16.50.135 172.16.50.136 172.16.50.137 emmanuelmal2
 
 set -euo pipefail

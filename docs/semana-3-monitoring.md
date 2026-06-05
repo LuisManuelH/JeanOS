@@ -2,7 +2,9 @@
 
 Guía para desplegar y validar el stack de observabilidad **desde `k8s-master01`**, replicando el laboratorio de forma ordenada.
 
-**Incluye:** Prometheus, Grafana, Node Exporter, kube-state-metrics, Loki, Promtail y métricas del backend Node.js (`/metrics`).
+**Para el equipo (todo en el master, sin Mac):** usa primero **`docs/SEMANA-3-REPLICAR.md`** (Ruta A).
+
+**Incluye:** Prometheus, Grafana, Node Exporter, kube-state-metrics, Loki, Promtail, métricas del backend (`/metrics`) y dashboard provisionado **jeanOS — Hardware del cluster**.
 
 **No incluye:** Tekton, ArgoCD, `nfs-csi` (se usa `nfs-client`).
 
@@ -33,12 +35,13 @@ IPs de referencia del inventario (`ansible-k8s/inventory/hosts.ini`):
 Conéctate al master y sitúate en el repositorio.
 
 ```bash
-ssh root@192.168.41.154
-# o la IP que uses para k8s-master01
+ssh root@IP_MASTER   # IP de tu k8s-master01 (ej. 172.16.50.135)
 
 cd /root/JeanOS   # ajusta la ruta donde tengas el clone
-git pull origin main
+git fetch origin && git checkout lab/equipo && git pull origin lab/equipo
 ```
+
+Si personalizaste en un PC y no en el master, sube el repo antes de aplicar: **`docs/SEMANA-3-REPLICAR.md`** (Ruta B, Paso 2).
 
 Si aún no clonaste el repo en el master:
 
@@ -231,6 +234,8 @@ kubectl get pvc -n monitoring | grep prometheus
 ```bash
 kubectl apply -f "${M}/grafana/pvc.yaml"
 kubectl apply -f "${M}/grafana/datasources-configmap.yaml"
+kubectl apply -f "${M}/grafana/dashboards-provider-configmap.yaml"
+kubectl apply -f "${M}/grafana/dashboards-configmap.yaml"
 kubectl apply -f "${M}/grafana/deployment.yaml"
 kubectl apply -f "${M}/grafana/service.yaml"
 kubectl wait --for=condition=available deployment/grafana -n monitoring --timeout=300s
@@ -329,7 +334,7 @@ up{job="jeanos-backend"}
 sum(rate(jeanos_http_requests_total[5m])) by (route)
 ```
 
-**Dashboard hardware (nodos):** Dashboards → Import → ID **1860** → datasource Prometheus.
+**Dashboard hardware:** **Dashboards → JeanOS → jeanOS — Hardware del cluster** (provisionado en `grafana/dashboards-configmap.yaml`). Alternativa manual: Import → ID **1860**.
 
 ---
 
@@ -432,7 +437,7 @@ sum(rate(jeanos_comparator_requests_total[5m])) by (source, status_code)
 - [ ] Grafana accesible en :30300, datasources OK
 - [ ] Loki + Promtail Running, logs `{namespace="jeanos-shop"}`
 - [ ] Backend `/metrics` con métricas `jeanos_*`
-- [ ] Dashboard nodos (1860) importado en Grafana
+- [ ] Dashboard **jeanOS — Hardware del cluster** visible en Grafana (carpeta JeanOS)
 - [ ] Capturas o evidencias en `docs/evidencias/` (opcional: `./docs/evidencias/collect-evidence.sh`)
 
 ---

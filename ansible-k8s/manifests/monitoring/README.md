@@ -1,5 +1,7 @@
 # Monitoreo JeanOS Shop — Semana 3
 
+**Guía para compañeros (todo en el master, sin Mac; dashboard):** `docs/SEMANA-3-REPLICAR.md` — Ruta A
+
 Stack mínimo: **Prometheus**, **Grafana**, **Node Exporter**, **kube-state-metrics**, **Loki**, **Promtail**.
 
 - Namespace: `monitoring`
@@ -57,6 +59,8 @@ kubectl wait --for=condition=available deployment/prometheus -n monitoring --tim
 # 7. Grafana
 kubectl apply -f "${M}/grafana/pvc.yaml"
 kubectl apply -f "${M}/grafana/datasources-configmap.yaml"
+kubectl apply -f "${M}/grafana/dashboards-provider-configmap.yaml"
+kubectl apply -f "${M}/grafana/dashboards-configmap.yaml"
 kubectl apply -f "${M}/grafana/deployment.yaml"
 kubectl apply -f "${M}/grafana/service.yaml"
 kubectl wait --for=condition=available deployment/grafana -n monitoring --timeout=300s
@@ -125,10 +129,23 @@ kubectl logs -n monitoring -l app=promtail --tail=20
 
 ### Grafana
 
-1. Login `http://<NODE_IP>:30300`
-2. **Explore → Prometheus**: `up{job="jeanos-backend"}`
-3. **Explore → Loki**: `{namespace="jeanos-shop"}`
-4. Importar dashboard nodos: **Dashboards → Import → ID `1860`** (Node Exporter Full)
+1. Login `http://<NODE_IP>:30300` (`admin` / `jeanos2026`)
+2. **Dashboards → JeanOS → jeanOS — Hardware del cluster** (provisionado desde el repo)
+3. **Explore → Prometheus**: `up{job="jeanos-backend"}`
+4. **Explore → Loki**: `{namespace="jeanos-shop"}`
+
+Si actualizas solo los dashboards en un cluster ya desplegado (desde el **master**, ruta `/root/JeanOS`):
+
+```bash
+G=/root/JeanOS/ansible-k8s/manifests/monitoring/grafana
+kubectl apply -f "${G}/dashboards-provider-configmap.yaml"
+kubectl apply -f "${G}/dashboards-configmap.yaml"
+kubectl apply -f "${G}/deployment.yaml"
+kubectl rollout restart deployment/grafana -n monitoring
+kubectl rollout status deployment/grafana -n monitoring --timeout=180s
+```
+
+Si los YAML están en tu PC: súbelos al master (Ruta B) — `docs/SEMANA-3-REPLICAR.md` → **Paso 4**.
 
 ## Scrape configurado (Prometheus)
 
@@ -189,7 +206,7 @@ monitoring/
 ├── README.md
 ├── node-exporter/
 ├── prometheus/          # incluye kube-state-metrics
-├── grafana/
+├── grafana/             # datasources + dashboards provisionados (hardware + tienda)
 ├── loki/
 └── promtail/
 ```

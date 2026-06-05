@@ -50,10 +50,18 @@ ARGOCD_ADMIN_PASSWORD=jeanos2026
 
 ## Desplegar (master)
 
+**Sin PC:** clona/actualiza el repo en el master y personaliza ahí (`personalizar-lab.sh` + `lab.env`).
+
+**Con PC (opcional):** `scp -r ansible-k8s root@IP_MASTER:/root/JeanOS/`
+
 ```bash
-scp -r ansible-k8s root@IP_MASTER:/root/JeanOS/
 ssh root@IP_MASTER
-cd /root/JeanOS/ansible-k8s
+cd /root/JeanOS
+# Si aún no tienes el repo:
+# git clone https://github.com/aliothosa/JeanOS.git && cd JeanOS && git checkout lab/equipo
+./scripts/personalizar-lab.sh IP_MASTER IP_W1 IP_W2 USUARIO_DOCKERHUB
+cd ansible-k8s
+cp lab.env.example lab.env   # editar con vi/nano
 ./deploy-semana4.sh --yes
 tkn pipelinerun logs jeanos-shop-build-run-1 -f -n tekton-pipelines
 ```
