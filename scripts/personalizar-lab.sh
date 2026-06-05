@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Personaliza IPs y usuario Docker Hub en los manifests del lab.
-# Uso: ./scripts/personalizar-lab.sh 172.16.50.135 172.16.50.136 172.16.50.137 emmanuelmal2
+# Ejecutar en el master (/root/JeanOS) o en PC con bash (Linux / WSL / Git Bash).
+# Uso: ./scripts/personalizar-lab.sh 192.168.41.154 192.168.41.157 192.168.41.158 aliothosa
 
 set -euo pipefail
 
@@ -12,7 +13,7 @@ DOCKER_USER="${4:-}"
 
 if [[ -z "$MASTER_IP" || -z "$WORKER1_IP" || -z "$WORKER2_IP" || -z "$DOCKER_USER" ]]; then
   echo "Uso: $0 IP_MASTER IP_WORKER1 IP_WORKER2 USUARIO_DOCKERHUB"
-  echo "Ej:  $0 172.16.50.135 172.16.50.136 172.16.50.137 emmanuelmal2"
+  echo "Ej:  $0 192.168.41.154 192.168.41.157 192.168.41.158 aliothosa"
   exit 1
 fi
 

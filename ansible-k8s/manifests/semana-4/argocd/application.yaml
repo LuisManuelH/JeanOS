@@ -10,7 +10,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/aliothosa/JeanOS
-    targetRevision: lab/equipo
+    targetRevision: main
     path: ansible-k8s/manifests
     directory:
       include: "{backend/**,frontend/**}"
