@@ -7,6 +7,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 S4="${SCRIPT_DIR}/manifests/semana-4"
 TEKTON="${S4}/tekton"
 ARGOCD_MANIFEST="${S4}/argocd/application.yaml"
+ARGOCD_ADMIN_PW_MANIFEST="${S4}/argocd/argocd-admin-password.yaml"
 LAB_ENV="${SCRIPT_DIR}/lab.env"
 TEKTON_RELEASE="https://storage.googleapis.com/tekton-releases/pipeline/latest/release.yaml"
 ARGOCD_INSTALL="https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml"
@@ -60,6 +61,24 @@ source "${LAB_ENV}"
 : "${DOCKER_IMAGE:?Define DOCKER_IMAGE en lab.env}"
 : "${DOCKER_USERNAME:?Define DOCKER_USERNAME en lab.env}"
 PIPELINE_RUN_NAME="${PIPELINE_RUN_NAME:-build-and-deploy-run-1}"
+ARGOCD_ADMIN_PASSWORD="${ARGOCD_ADMIN_PASSWORD:-jeanos2026}"
+
+set_argocd_admin_password() {
+  if [[ "${ARGOCD_ADMIN_PASSWORD}" == "jeanos2026" ]]; then
+    log "Contraseña ArgoCD desde manifest (admin / jeanos2026)"
+    kubectl apply -f "${ARGOCD_ADMIN_PW_MANIFEST}"
+    return
+  fi
+  if ! command -v htpasswd >/dev/null 2>&1; then
+    echo "Para otra ARGOCD_ADMIN_PASSWORD instala htpasswd (httpd-tools) o deja jeanos2026." >&2
+    exit 1
+  fi
+  local hash
+  hash="$(htpasswd -nbBC 10 "" "${ARGOCD_ADMIN_PASSWORD}" | tr -d '\n:' | sed 's/\$2y/\$2a/')"
+  kubectl patch secret argocd-secret -n argocd --type merge -p \
+    "$(printf '{"stringData":{"admin.password":"%s","admin.passwordMtime":"%s"}}' \
+      "${hash}" "$(date -Iseconds 2>/dev/null || date +%Y-%m-%dT%H:%M:%S%z)")"
+}
 
 render() {
   local src="$1"
@@ -127,6 +146,7 @@ if ! $SKIP_ARGOCD; then
     log "Exponer ArgoCD NodePort 30443"
     kubectl patch svc argocd-server -n argocd --type merge -p \
       '{"spec":{"type":"NodePort","ports":[{"port":443,"nodePort":30443,"targetPort":8080,"protocol":"TCP","name":"https"}]}}'
+    set_argocd_admin_password
   fi
 
   log "ArgoCD Application mi-tienda → namespace demo"
@@ -134,6 +154,6 @@ if ! $SKIP_ARGOCD; then
 fi
 
 log "Semana 4 manifests aplicados."
-echo "  ArgoCD:  https://<IP-NODO>:30443  (admin / ver secret argocd-initial-admin-secret)"
+echo "  ArgoCD:  https://<IP-NODO>:30443  (admin / ${ARGOCD_ADMIN_PASSWORD})"
 echo "  App demo: http://<IP-NODO>:31080"
 echo "  JeanOS:   http://<IP-NODO>:30080"

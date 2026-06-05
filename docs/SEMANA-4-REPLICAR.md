@@ -1,14 +1,23 @@
 # Semana 4 — Replicar Tekton + ArgoCD (equipo)
 
-Manifests listos en **`ansible-k8s/manifests/semana-4/`** y script **`ansible-k8s/deploy-semana4.sh`**.
+Guía única para repetir el lab. Manifests en **`ansible-k8s/manifests/semana-4/`**, script **`ansible-k8s/deploy-semana4.sh`**.
 
-## Para compañeros en rama `main`
+Lab completo (Semanas 2–4, IPs, firewall): **`docs/GUIA-EQUIPO-LAB.md`**.
+
+## Obtener el código
 
 ```bash
-git checkout main
-git pull origin main
-# Si Semana 4 aún no está en main, traer desde lab/equipo:
-# git fetch origin lab/equipo && git checkout origin/lab/equipo -- ansible-k8s/manifests/semana-4 ansible-k8s/deploy-semana4.sh ansible-k8s/lab.env.example docs/SEMANA-4-REPLICAR.md
+git fetch origin
+git checkout lab/equipo
+git pull origin lab/equipo
+```
+
+Si tu equipo usa `main` y aún no tiene Semana 4:
+
+```bash
+git checkout main && git pull
+git fetch origin lab/equipo
+git checkout origin/lab/equipo -- ansible-k8s/manifests/semana-4 ansible-k8s/deploy-semana4.sh ansible-k8s/lab.env.example docs/SEMANA-4-REPLICAR.md
 ```
 
 ## Checklist antes de Semana 4
@@ -16,7 +25,9 @@ git pull origin main
 - [ ] Semana 2 OK (`kubectl get pods -n jeanos-shop`)
 - [ ] `kubectl get storageclass nfs-client`
 - [ ] Cuenta Docker Hub + **Access Token**
-- [ ] Repo GitHub público con `app/` + `k8s/` (ej. `aliothosa/page-public-demo`)
+- [ ] Repo GitHub público con carpeta **`app/`** para Tekton (ej. `aliothosa/page-public-demo`)
+- [ ] Semana 2 y 3 hechas (NFS, tienda, monitoreo opcional pero recomendado)
+- [ ] Nodos **ARM64**: la demo ArgoCD usa manifests en este repo (`demo/`), no el `k8s/` del curso (imagen amd64)
 
 ## Personalizar (cada alumno)
 
@@ -36,6 +47,7 @@ DOCKER_IMAGE=TU_USUARIO/mi-tienda:v1
 DOCKER_USERNAME=TU_USUARIO
 DOCKER_TOKEN=tu_token_de_docker_hub
 PIPELINE_RUN_NAME=build-and-deploy-run-1
+ARGOCD_ADMIN_PASSWORD=jeanos2026
 ```
 
 **No commitear `lab.env`** (contiene el token).
@@ -68,7 +80,16 @@ tkn pipelinerun logs build-and-deploy-run-1 -f -n tekton-pipelines
 | App | http://IP_WORKER:31080 |
 | UI ArgoCD | https://IP_WORKER:30443 |
 
-Contraseña ArgoCD inicial:
+Login ArgoCD (definido en manifest del lab, no aleatorio):
+
+| Campo | Valor |
+|-------|--------|
+| Usuario | `admin` |
+| Contraseña | `jeanos2026` (o `ARGOCD_ADMIN_PASSWORD` en `lab.env`) |
+
+Manifest: `ansible-k8s/manifests/semana-4/argocd/argocd-admin-password.yaml` (hash bcrypt, no texto plano).
+
+Si instalaste ArgoCD a mano sin el script, aplica ese YAML o saca la aleatoria:
 
 ```bash
 kubectl -n argocd get secret argocd-initial-admin-secret \
@@ -96,13 +117,36 @@ firewall-cmd --reload
 
 Los nodos del lab son **aarch64**. El repo demo debe poder construir imagen ARM (Kaniko en nodo ARM genera arm64). JeanOS ya usa `podman build --platform linux/arm64`.
 
+## URLs del lab (cambiar IP por la de tu worker)
+
+| Servicio | URL |
+|----------|-----|
+| Tienda JeanOS | http://IP_WORKER:30080 |
+| Demo GitOps | http://IP_WORKER:31080 |
+| ArgoCD | https://IP_WORKER:30443 |
+| Grafana | http://IP_WORKER:30300 |
+| Prometheus | http://IP_WORKER:30900 |
+
 ## Archivos del equipo (referencia)
 
 ```
 ansible-k8s/
-├── lab.env.example          # plantilla (sin secretos)
-├── deploy-semana4.sh        # orquesta Tekton + ArgoCD
+├── lab.env.example
+├── deploy-semana4.sh
 └── manifests/semana-4/
-    ├── tekton/              # Tasks, Pipeline, PipelineRun
-    └── argocd/              # Application GitOps
+    ├── tekton/                         # CI: clone + Kaniko
+    ├── argocd/
+    │   ├── application.yaml            # GitOps → namespace demo
+    │   └── argocd-admin-password.yaml  # admin / jeanos2026 (bcrypt)
+    └── demo/                           # Deployment + Service :31080 (ARM)
 ```
+
+## Problemas frecuentes
+
+| Síntoma | Qué revisar |
+|---------|-------------|
+| Demo CrashLoop `exec format error` | Imagen amd64; usar `demo/` de JeanOS + imagen de Tekton en Hub |
+| ArgoCD login falla | Usar **https**, usuario `admin`, contraseña `jeanos2026`; o aplicar `argocd-admin-password.yaml` |
+| PipelineRun falla push | `DOCKER_TOKEN` en `lab.env`, secret `docker-credentials` en `tekton-pipelines` |
+| PVC pendiente | `kubectl get sc` → debe existir **nfs-client** (Semana 2) |
+| ArgoCD install CRD error | El script usa `kubectl apply --server-side`; no aplicar install.yaml a mano sin eso |

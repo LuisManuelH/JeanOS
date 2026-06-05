@@ -14,6 +14,7 @@ cp lab.env.example lab.env    # editar repo GitHub, imagen Docker Hub, usuario
 |-------------------|---------------|
 | `tekton/` | Tasks, Pipeline y PipelineRun (CI: clone + build Kaniko + push) |
 | `argocd/application.yaml` | Application GitOps hacia namespace `demo` |
+| `argocd/argocd-admin-password.yaml` | Hash bcrypt admin (`jeanos2026` por defecto en el lab) |
 | `lab.env.example` | Variables del lab (copiar a `lab.env`) |
 
 ## Requisitos
